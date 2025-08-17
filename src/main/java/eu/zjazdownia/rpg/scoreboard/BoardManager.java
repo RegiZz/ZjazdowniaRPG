@@ -48,7 +48,7 @@ public class BoardManager {
             int score = lines.size();
             for (String raw : lines) {
                 String line = raw
-                        .replace("%ip%", plugin.getConfig().getString("server.ip"))
+                        .replace("%ip%", plugin.getConfig().getString("server.ip") == null ? "—" : plugin.getConfig().getString("server.ip"))
                         .replace("%player%", p.getName())
                         .replace("%class%", clazz == null ? "—" : plugin.getConfig().getString("classes."+clazz+".short"))
                         .replace("%level%", String.valueOf(level));
@@ -62,6 +62,5 @@ public class BoardManager {
     public void hide(Player p) {
         BukkitTask t = tasks.remove(p.getUniqueId());
         if (t != null) t.cancel();
-        // nie wyłączamy scoreboardu – niech zostanie ostatni stan
     }
 }

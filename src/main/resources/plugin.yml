@@ -16,6 +16,10 @@ commands:
     description: Resetuje dane podanego gracza lub jeżeli nie wpiszemy gracza to resetuje konto osoby wysyłającej.
     usage: /resetkonto <gracz>
     permission: zjazdownia.admin
+  zradmin:
+    description: "Admin command for ZjazdowniaRPG"
+    usage: /zradmin <sub>
+    permission: zjazdownia.admin
 
 permissions:
   zjazdownia.account.2:

@@ -18,7 +18,7 @@ public class LevelManager {
     // Konfig
     private int baseExp;
     private int stepExp;
-    private int maxLevel;
+    public int maxLevel;
     private double healthPerLevel;
 
     // bonusy ataku

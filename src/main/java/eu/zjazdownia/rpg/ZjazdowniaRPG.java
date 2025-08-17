@@ -5,6 +5,7 @@ import eu.zjazdownia.rpg.classes.ClassAbilities;
 import eu.zjazdownia.rpg.commands.KlasaCommand;
 import eu.zjazdownia.rpg.commands.KontoCommand;
 import eu.zjazdownia.rpg.commands.ResetKontoCommand;
+import eu.zjazdownia.rpg.commands.ZRAdminCommand;
 import eu.zjazdownia.rpg.gui.AccountGUI;
 import eu.zjazdownia.rpg.gui.ClassGUI;
 import eu.zjazdownia.rpg.level.LevelManager;
@@ -67,6 +68,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         getCommand("konto").setExecutor(new KontoCommand(accountGUI));
         getCommand("klasa").setExecutor(new KlasaCommand(classGUI, accountManager));
         getCommand("resetkonto").setExecutor(new ResetKontoCommand(accountManager));
+        getCommand("zradmin").setExecutor(new ZRAdminCommand(this));
 
         getLogger().info("ZjazdowniaRPG wlaczone.");
     }
