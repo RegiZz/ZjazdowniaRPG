@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -177,19 +178,31 @@ public class ClassAbilities implements Listener {
         e.setDamage(e.getDamage() * warriorDamageTakenMultiplier);
     }
 
-    // MAG: PPM z różdżką
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onMageCast(PlayerInteractEvent e) {
+// reagujemy tylko na main hand
         if (e.getHand() != EquipmentSlot.HAND) return;
+
         Action a = e.getAction();
         if (a != Action.RIGHT_CLICK_AIR && a != Action.RIGHT_CLICK_BLOCK) return;
 
         Player p = e.getPlayer();
         if (!isClass(p, "mage")) return;
 
-        Material t = p.getInventory().getItemInMainHand() == null
-                ? Material.AIR : p.getInventory().getItemInMainHand().getType();
-        if (t != Material.STICK && t != Material.BLAZE_ROD) return;
+        ItemStack handItem = p.getInventory().getItemInMainHand();
+        Material t = handItem == null ? Material.AIR : handItem.getType();
+
+// wymóg: tylko blaze_rod/stick lub (lepiej) oznaczona różdżka przez PDC
+        boolean isWandType = (t == Material.STICK || t == Material.BLAZE_ROD);
+        if (!isWandType) return;
+
+// opcjonalnie: wymagaj konkretnej różdżki oznaczonej PDC (bez tego każdy patyk zadziała)
+        NamespacedKey wandKey = new NamespacedKey(plugin, "mage_wand");
+        if (handItem == null || handItem.getItemMeta() == null ||
+                !handItem.getItemMeta().getPersistentDataContainer().has(wandKey, PersistentDataType.BYTE)) {
+// jeśli chcesz, by każdy patyk/blaze_rod działał, usuń tę sekcję
+            return;
+        }
 
         long now = System.currentTimeMillis();
         long next = mageCooldown.getOrDefault(p.getUniqueId(), 0L);
@@ -200,9 +213,13 @@ public class ClassAbilities implements Listener {
             return;
         }
 
-        Snowball bolt = p.launchProjectile(Snowball.class, p.getLocation().getDirection().multiply(mageBoltSpeed));
-        PersistentDataContainer pdc = bolt.getPersistentDataContainer();
-        pdc.set(MAGE_BOLT_KEY, PersistentDataType.BYTE, (byte) 1);
+// użyj kierunku z oczu — dokładniejsze celowanie
+        Vector dir = p.getEyeLocation().getDirection().normalize().multiply(mageBoltSpeed);
+        Snowball bolt = p.launchProjectile(Snowball.class);
+        bolt.setVelocity(dir);
+
+// oznacz pocisk, aby rozpoznać go później
+        bolt.getPersistentDataContainer().set(MAGE_BOLT_KEY, PersistentDataType.BYTE, (byte) 1);
 
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ILLUSIONER_CAST_SPELL, 1f, 1.2f);
         p.getWorld().spawnParticle(Particle.SPELL_WITCH, p.getEyeLocation(), 20, 0.3, 0.3, 0.3, 0.01);

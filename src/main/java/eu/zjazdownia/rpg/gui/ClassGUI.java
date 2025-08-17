@@ -3,11 +3,7 @@ package eu.zjazdownia.rpg.gui;
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.account.AccountManager;
 import eu.zjazdownia.rpg.util.LocUtil;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -18,6 +14,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -128,19 +125,35 @@ public class ClassGUI implements Listener {
             return;
         }
 
-// Mag / Mage
         if (k.equals("mag") || k.equals("mage")) {
+            NamespacedKey wandKey = new NamespacedKey(plugin, "mage_wand");
+
+// przygotuj różdżkę z tagiem
             ItemStack wand = new ItemStack(Material.BLAZE_ROD);
             ItemMeta m = wand.getItemMeta();
             if (m != null) {
                 m.setDisplayName(ChatColor.LIGHT_PURPLE + "Różdżka");
+// dodaj tag PDC, tylko przedmiot z tym tagiem będzie działać jako różdżka
+                m.getPersistentDataContainer().set(wandKey, PersistentDataType.BYTE, (byte) 1);
+                m.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                 wand.setItemMeta(m);
             }
-// jeśli gracz ma już STICK albo BLAZE_ROD, nie dawaj kolejnej różdżki
-            boolean hasWand = p.getInventory().contains(Material.BLAZE_ROD) || p.getInventory().contains(Material.STICK);
+
+// sprawdź, czy gracz już posiada oznaczoną różdżkę (szukamy tagu)
+            boolean hasWand = false;
+            for (ItemStack it : p.getInventory().getContents()) {
+                if (it == null) continue;
+                ItemMeta im = it.getItemMeta();
+                if (im != null && im.getPersistentDataContainer().has(wandKey, PersistentDataType.BYTE)) {
+                    hasWand = true;
+                    break;
+                }
+            }
+
             if (!hasWand) {
                 giveOrDrop(p, wand);
             }
+
             p.sendMessage(ChatColor.YELLOW + "Otrzymałeś różdżkę maga.");
             return;
         }
