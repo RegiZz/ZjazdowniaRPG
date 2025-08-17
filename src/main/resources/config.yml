@@ -1,0 +1,19 @@
+scoreboard:
+  title: "&6&lZJAZDOWNIA.EU"
+
+abilities:
+  warrior:
+    melee-damage-multiplier: 1.20 # mnożnik obrażeń wręcz
+    damage-taken-multiplier: 0.90 # mnożnik otrzymywanych obrażeń
+  mage:
+    bolt:
+      damage: 6.0 # obrażenia pocisku
+      cooldown-seconds: 5.0 # CD w sekundach
+      speed: 1.4 # prędkość pocisku
+      weakness-seconds: 4 # czas Słabości po trafieniu
+      slow-seconds: 3 # czas Spowolnienia po trafieniu
+  archer:
+    arrow-damage-multiplier: 1.25 # mnożnik obrażeń z łuku
+    arrow-speed-multiplier: 1.05 # mnożnik prędkości strzały
+    slow-seconds: 2 # spowolnienie po trafieniu strzałą
+    slow-amplifier: 1 # poziom spowolnienia (0 = I, 1 = II)

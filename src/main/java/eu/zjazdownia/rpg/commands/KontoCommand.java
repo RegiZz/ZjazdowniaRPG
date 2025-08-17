@@ -1,4 +1,19 @@
 package eu.zjazdownia.rpg.commands;
 
-public class KontoCommand {
+import eu.zjazdownia.rpg.gui.AccountGUI;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
+public class KontoCommand implements CommandExecutor {
+    private final AccountGUI gui;
+    public KontoCommand(AccountGUI gui) { this.gui = gui; }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player p)) return true;
+        gui.openFor(p);
+        return true;
+    }
 }
