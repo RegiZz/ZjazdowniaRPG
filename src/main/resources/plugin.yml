@@ -1,0 +1,6 @@
+name: ZjazdowniaRPG
+version: '1.0-SNAPSHOT'
+main: eu.zjazdownia.zjazdowniaRPG.ZjazdowniaRPG
+api-version: '1.20'
+authors: [ RegiZz, Zjazdownia.eu ]
+website: https://zjazdownia.eu
