@@ -56,6 +56,12 @@ public class ConfigUtils {
                 "&8-------------------",
                 "&7IP: &f%ip%"
         ));
+        c.addDefault("firstSpawn.world", "world");
+        c.addDefault("firstSpawn.x", 100.5);
+        c.addDefault("firstSpawn.y", 10);
+        c.addDefault("firstSpawn.z", 730.2);
+        c.addDefault("firstSpawn.yaw", 0);
+        c.addDefault("firstSpawn.pitch", 0);
 
 // abilities (jeśli nie masz już w configu)
         c.addDefault("abilities.warrior.melee-damage-multiplier", 1.20);

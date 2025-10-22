@@ -3,13 +3,11 @@ package eu.zjazdownia.rpg.commands;
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.account.AccountManager;
 import eu.zjazdownia.rpg.level.LevelManager;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.NamespacedKey;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -51,6 +49,7 @@ public class ZRAdminCommand implements CommandExecutor {
                 case "setclass" -> cmdSetClass(sender, args);
                 case "givewand" -> cmdGiveWand(sender, args);
                 case "info" -> cmdInfo(sender, args);
+                case "setfirstspawn" -> cmdSetFirstSpawn(sender);
                 default -> sendHelp(sender);
             }
         } catch (Exception ex) {
@@ -62,11 +61,26 @@ public class ZRAdminCommand implements CommandExecutor {
 
     private void sendHelp(CommandSender s) {
         s.sendMessage(ChatColor.GOLD + "ZRAdmin:");
-        s.sendMessage( ChatColor.YELLOW + "/zradmin setlevel <nick> <level>");
+        s.sendMessage(ChatColor.YELLOW + "/zradmin setlevel <nick> <level>");
         s.sendMessage(ChatColor.YELLOW + "/zradmin addxp <nick> <amount>");
         s.sendMessage(ChatColor.YELLOW + "/zradmin setclass <nick> <classKey>");
         s.sendMessage(ChatColor.YELLOW + "/zradmin givewand <nick>");
         s.sendMessage(ChatColor.YELLOW + "/zradmin info <nick>");
+        s.sendMessage(ChatColor.YELLOW + "/zradmin setfirstspawn");
+    }
+
+    private void cmdSetFirstSpawn(CommandSender s) {
+        Player p = (Player) s;
+        Location playerLocation =  p.getLocation();
+        FileConfiguration config = plugin.getConfig();
+
+        config.set("firstSpawn.world", playerLocation.getWorld().getName());
+        config.set("firstSpawn.x", playerLocation.getBlockX());
+        config.set("firstSpawn.y", playerLocation.getBlockY());
+        config.set("firstSpawn.z", playerLocation.getBlockZ());
+        config.set("firstSpawn.yaw", playerLocation.getYaw());
+        config.set("firstSpawn.pitch", playerLocation.getPitch());
+        p.sendMessage(ChatColor.GREEN + "Ustawiono miejsce w którym gracze będą sie spawnować po pierwszym wejsciu na serwer!");
     }
 
     private void cmdSetLevel(CommandSender s, String[] args) {

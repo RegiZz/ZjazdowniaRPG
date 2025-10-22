@@ -13,8 +13,14 @@ import eu.zjazdownia.rpg.level.LevelingListener;
 import eu.zjazdownia.rpg.listener.PlayerJoinQuitListener;
 import eu.zjazdownia.rpg.scoreboard.BoardManager;
 import eu.zjazdownia.rpg.util.ConfigUtils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,6 +28,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class ZjazdowniaRPG extends JavaPlugin implements Listener {
@@ -31,7 +39,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
     private BoardManager boardManager;
     private AccountGUI accountGUI;
     private ClassGUI classGUI;
-    private LevelManager levelManager; // <--- dodane
+    private LevelManager levelManager;
 
     public static ZjazdowniaRPG get() { return instance; }
 
@@ -85,18 +93,38 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         }
     }
 
+    private final Map<UUID, Location> pendingTeleports = new HashMap<>();
+
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
         Player p = e.getPlayer();
         UUID id = p.getUniqueId();
-// wczytaj dane + ustaw aktualne konto na 1 (domyślnie)
+        FileConfiguration config = getConfig();
+
         accountManager.ensureLoaded(id);
-// teleport na ostatnią znaną pozycję (jeśli jest)
+
         Location last = accountManager.getLastLocation(id);
+        Location spawn = Bukkit.getWorld("world").getSpawnLocation();
         if (last != null && last.getWorld() != null) {
-            Bukkit.getScheduler().runTask(this, () -> p.teleport(last));
+            Bukkit.getScheduler().runTask(this, () -> {
+                p.teleport(spawn);
+                showTeleportChoice(p, last);
+            });
         }
-// jeśli konto puste – pokaż kreator, inaczej uruchom stały scoreboard
+        else if(last == null){
+            String worldname = config.getString("firstSpawn.world");
+            double x = config.getDouble("firstSpawn.x");
+            double y = config.getDouble("firstSpawn.y");
+            double z = config.getDouble("firstSpawn.z");
+            float yaw = (float)config.getDouble("firstSpawn.yaw");
+            float pitch = (float)config.getDouble("firstSpawn.pitch");
+
+            World world = Bukkit.getWorld(worldname);
+            Location loc = new Location(world, x, y, z, yaw, pitch);
+
+            Bukkit.getScheduler().runTask(this, () -> p.teleport(loc));
+        }
+
         Bukkit.getScheduler().runTaskLater(this, () -> {
             if (accountManager.getSelectedClass(id) == null) {
                 accountGUI.openFor(p);
@@ -114,10 +142,32 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         accountManager.flush(p.getUniqueId());
     }
 
+    private void showTeleportChoice(Player p, Location last) {
+        Component base = Component.text("📍 Twoja ostatnia lokalizacja: ", NamedTextColor.YELLOW)
+                .append(Component.text(String.format("x: %.1f, y: %.1f, z: %.1f",
+                        last.getX(), last.getY(), last.getZ()), NamedTextColor.GRAY))
+                .append(Component.newline())
+                .append(Component.text("Czy chcesz się tam teleportować?", NamedTextColor.WHITE))
+                .append(Component.newline());
+
+        Component yes = Component.text("[✅ Tak]", NamedTextColor.GREEN)
+                .hoverEvent(HoverEvent.showText(Component.text("Kliknij, aby się tam przenieść")))
+                .clickEvent(ClickEvent.callback(audience -> {
+                    if (p.isOnline()) {
+                        Bukkit.getScheduler().runTask(this, () -> p.teleport(last));
+                        p.sendMessage("§aTeleportowano do twojej ostatniej lokalizacji!");
+                    }
+                }));
+
+        Component no = Component.text(" [❌ Nie]", NamedTextColor.RED)
+                .hoverEvent(HoverEvent.showText(Component.text("Kliknij, aby zostać na spawnie")))
+                .clickEvent(ClickEvent.callback(audience -> p.sendMessage("§7Zostałeś na spawnie.")));
+
+        p.sendMessage(base.append(yes).append(no));
+    }
+
     public AccountManager accounts() { return accountManager; }
     public BoardManager board() { return boardManager; }
     public ClassGUI classGUI() { return classGUI; }
-
-    // getter dla LevelManager
     public LevelManager levels() { return levelManager; }
 }
