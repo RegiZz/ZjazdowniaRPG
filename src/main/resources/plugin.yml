@@ -20,6 +20,10 @@ commands:
     description: Komenda administracyjna dla ZjazdowniaRPG.
     usage: /zradmin <sub>
     permission: zjazdownia.admin
+  city:
+    description: Zarządzanie mastami
+    usage: /city <arg> <arg2> <arg3>
+    permission: zjazdownia.admin
 
 permissions:
   zjazdownia.account.2:

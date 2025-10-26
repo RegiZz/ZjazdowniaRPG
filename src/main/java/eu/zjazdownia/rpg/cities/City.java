@@ -28,6 +28,7 @@ public class City {
         this.name = name;
     }
 
+
     public Location getLocation() {
         return location;
     }

@@ -23,8 +23,15 @@ public class CityComands implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
-        if (args.length == 0) {
-            p.sendMessage(ChatColor.RED + "Nieznana komenda.");
+        if (!sender.hasPermission("zjazdownia.admin")) {
+            sender.sendMessage(ChatColor.RED + "Brak uprawnień.");
+            return true;
+        }
+        if (args.length == 0 || args[0].toLowerCase().equals("help")) {
+            p.sendMessage(ChatColor.BLUE + "Cities");
+            p.sendMessage(ChatColor.YELLOW + "/city info - informacje o miastach");
+            p.sendMessage(ChatColor.YELLOW + "/city create <nazwa> <promien> - tworzy nowe miasto");
+            p.sendMessage(ChatColor.YELLOW + "/city delete <id> - usuwa miasto o podanym ID");
             return true;
         }
         Location playerLocation = p.getLocation();
@@ -63,6 +70,26 @@ public class CityComands implements CommandExecutor {
                 City city = new City(cityName, id, cityLocation, cityRadius);
                 citiesById.put(id, city);
                 p.sendMessage(ChatColor.GREEN + "Utworzono miasto '" + cityName + "' z ID=" + id + " i promieniem " + cityRadius + ".");
+                break;
+            }
+            case "delete": {
+                if (args.length < 2) {
+                    p.sendMessage(ChatColor.RED + "Użycie: /" + label + " delete <id>");
+                    break;
+                }
+                int idToDelete;
+                try {
+                    idToDelete = Integer.parseInt(args[1]);
+                } catch (NumberFormatException e) {
+                    p.sendMessage(ChatColor.RED + "ID musi być liczbą całkowitą.");
+                    break;
+                }
+                City removed = citiesById.remove(idToDelete);
+                if (removed == null) {
+                    p.sendMessage(ChatColor.RED + "Nie znaleziono miasta o ID=" + idToDelete);
+                    break;
+                }
+                p.sendMessage(ChatColor.GREEN + "Usunięto miasto '" + removed.getName() + "' (ID=" + idToDelete + ").");
                 break;
             }
             default:

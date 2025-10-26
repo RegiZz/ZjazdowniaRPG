@@ -104,28 +104,31 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
 
         Location last = accountManager.getLastLocation(id);
         Location spawn = Bukkit.getWorld("world").getSpawnLocation();
-        if (last != null && last.getWorld() != null) {
-            Bukkit.getScheduler().runTask(this, () -> {
-                if(citySpawn(last) != null){
-                    p.teleport(citySpawn(last));
-                }else{
-                    p.teleport(spawn);
-                }
-            });
-        }
-        else if(last == null){
-            String worldname = config.getString("firstSpawn.world");
-            double x = config.getDouble("firstSpawn.x");
-            double y = config.getDouble("firstSpawn.y");
-            double z = config.getDouble("firstSpawn.z");
-            float yaw = (float)config.getDouble("firstSpawn.yaw");
-            float pitch = (float)config.getDouble("firstSpawn.pitch");
+        if(!p.hasPermission("zjazdownia.admin")){
+            if (last != null && last.getWorld() != null) {
+                Bukkit.getScheduler().runTask(this, () -> {
+                    if(citySpawn(last) != null){
+                        p.teleport(citySpawn(last));
+                    }else{
+                        p.teleport(spawn);
+                    }
+                });
+            }
+            else if(last == null){
+                String worldname = config.getString("firstSpawn.world");
+                double x = config.getDouble("firstSpawn.x");
+                double y = config.getDouble("firstSpawn.y");
+                double z = config.getDouble("firstSpawn.z");
+                float yaw = (float)config.getDouble("firstSpawn.yaw");
+                float pitch = (float)config.getDouble("firstSpawn.pitch");
 
-            World world = Bukkit.getWorld(worldname);
-            Location loc = new Location(world, x, y, z, yaw, pitch);
+                World world = Bukkit.getWorld(worldname);
+                Location loc = new Location(world, x, y, z, yaw, pitch);
 
-            Bukkit.getScheduler().runTask(this, () -> p.teleport(loc));
+                Bukkit.getScheduler().runTask(this, () -> p.teleport(loc));
+            }
         }
+
 
         Bukkit.getScheduler().runTaskLater(this, () -> {
             if (accountManager.getSelectedClass(id) == null) {
