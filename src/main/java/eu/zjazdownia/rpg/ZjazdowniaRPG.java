@@ -1,11 +1,9 @@
 package eu.zjazdownia.rpg;
 
 import eu.zjazdownia.rpg.account.AccountManager;
+import eu.zjazdownia.rpg.cities.City;
 import eu.zjazdownia.rpg.classes.ClassAbilities;
-import eu.zjazdownia.rpg.commands.KlasaCommand;
-import eu.zjazdownia.rpg.commands.KontoCommand;
-import eu.zjazdownia.rpg.commands.ResetKontoCommand;
-import eu.zjazdownia.rpg.commands.ZRAdminCommand;
+import eu.zjazdownia.rpg.commands.*;
 import eu.zjazdownia.rpg.gui.AccountGUI;
 import eu.zjazdownia.rpg.gui.ClassGUI;
 import eu.zjazdownia.rpg.level.LevelManager;
@@ -77,6 +75,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         getCommand("klasa").setExecutor(new KlasaCommand(classGUI, accountManager));
         getCommand("resetkonto").setExecutor(new ResetKontoCommand(accountManager));
         getCommand("zradmin").setExecutor(new ZRAdminCommand(this));
+        getCommand("city").setExecutor(new CityComands());
 
         getLogger().info("ZjazdowniaRPG wlaczone.");
     }
@@ -107,8 +106,11 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         Location spawn = Bukkit.getWorld("world").getSpawnLocation();
         if (last != null && last.getWorld() != null) {
             Bukkit.getScheduler().runTask(this, () -> {
-                p.teleport(spawn);
-                showTeleportChoice(p, last);
+                if(citySpawn(last) != null){
+                    p.teleport(citySpawn(last));
+                }else{
+                    p.teleport(spawn);
+                }
             });
         }
         else if(last == null){
@@ -134,6 +136,13 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         }, 10L);
     }
 
+    private Location citySpawn(Location lastPlayerLoacation){
+        CityComands CityCommands = new CityComands();
+        City city = CityCommands.findCityAt(lastPlayerLoacation);
+
+        return city.getLocation();
+    }
+
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
@@ -142,29 +151,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         accountManager.flush(p.getUniqueId());
     }
 
-    private void showTeleportChoice(Player p, Location last) {
-        Component base = Component.text("📍 Twoja ostatnia lokalizacja: ", NamedTextColor.YELLOW)
-                .append(Component.text(String.format("x: %.1f, y: %.1f, z: %.1f",
-                        last.getX(), last.getY(), last.getZ()), NamedTextColor.GRAY))
-                .append(Component.newline())
-                .append(Component.text("Czy chcesz się tam teleportować?", NamedTextColor.WHITE))
-                .append(Component.newline());
 
-        Component yes = Component.text("[✅ Tak]", NamedTextColor.GREEN)
-                .hoverEvent(HoverEvent.showText(Component.text("Kliknij, aby się tam przenieść")))
-                .clickEvent(ClickEvent.callback(audience -> {
-                    if (p.isOnline()) {
-                        Bukkit.getScheduler().runTask(this, () -> p.teleport(last));
-                        p.sendMessage("§aTeleportowano do twojej ostatniej lokalizacji!");
-                    }
-                }));
-
-        Component no = Component.text(" [❌ Nie]", NamedTextColor.RED)
-                .hoverEvent(HoverEvent.showText(Component.text("Kliknij, aby zostać na spawnie")))
-                .clickEvent(ClickEvent.callback(audience -> p.sendMessage("§7Zostałeś na spawnie.")));
-
-        p.sendMessage(base.append(yes).append(no));
-    }
 
     public AccountManager accounts() { return accountManager; }
     public BoardManager board() { return boardManager; }

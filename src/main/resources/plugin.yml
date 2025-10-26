@@ -17,7 +17,7 @@ commands:
     usage: /resetkonto <gracz>
     permission: zjazdownia.admin
   zradmin:
-    description: "Admin command for ZjazdowniaRPG"
+    description: Komenda administracyjna dla ZjazdowniaRPG.
     usage: /zradmin <sub>
     permission: zjazdownia.admin
 
@@ -26,5 +26,5 @@ permissions:
     description: Odblokowuje drugie konto (premium).
     default: false
   zjazdownia.admin:
-    description: Uprawnienia administracyjne do resetu.
+    description: Uprawnienia administracyjne do RPG.
     default: op

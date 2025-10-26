@@ -62,9 +62,6 @@ public class LevelingListener implements Listener {
             UUID pu = lastDamagerPlayer.get(entId);
             if (time != null && pu != null && (System.currentTimeMillis() - time) <= DAMAGE_TIMEOUT_MS) {
                 killer = plugin.getServer().getPlayer(pu);
-                plugin.getLogger().info("Fallback killer from damage map: " + (killer == null ? "player offline/null" : killer.getName()));
-            } else {
-                plugin.getLogger().info("No killer found and no recent damager recorded.");
             }
         } else {
             plugin.getLogger().info("getKiller() -> " + killer.getName());
