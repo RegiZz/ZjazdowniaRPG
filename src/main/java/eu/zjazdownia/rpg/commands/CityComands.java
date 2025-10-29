@@ -3,7 +3,9 @@ package eu.zjazdownia.rpg.commands;
 import eu.zjazdownia.rpg.cities.City;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -117,11 +119,16 @@ public class CityComands implements CommandExecutor {
                     for(City c : citiesById.values()){
                         if(c.getName().equals(cityName)){
                             showCityBorder(c);
+                            p.sendMessage(ChatColor.GREEN + "Pokazano granice miasta '" + c.getName() + "'.");
                             break;
                         }
                     }
 
                 }
+                else{
+                    p.sendMessage(ChatColor.RED + "Poprawne uzycie /" + label + " showborder <nazwa_miasta>");
+                }
+                break;
             }
             default:
                 p.sendMessage(ChatColor.RED + "Nieznana komenda.");
@@ -140,7 +147,9 @@ public class CityComands implements CommandExecutor {
             double angle = i * 2 * Math.PI / points;
             double x = loc.getX() + radius * Math.cos(angle);
             double z = loc.getZ() + radius * Math.sin(angle);
-            world.spawnParticle(org.bukkit.Particle.FLAME, x, loc.getY(), z, 1,0,0,0,0);
+            Block highestBlock = world.getHighestBlockAt((int)x, (int)z);
+            double y = highestBlock.getY() + 1;
+            world.spawnParticle(Particle.FLAME, x, y, z, 1,0,0,0,0);
         }
     }
 
