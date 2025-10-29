@@ -3,6 +3,7 @@ package eu.zjazdownia.rpg.commands;
 import eu.zjazdownia.rpg.cities.City;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -32,6 +33,8 @@ public class CityComands implements CommandExecutor {
             p.sendMessage(ChatColor.YELLOW + "/city info - informacje o miastach");
             p.sendMessage(ChatColor.YELLOW + "/city create <nazwa> <promien> - tworzy nowe miasto");
             p.sendMessage(ChatColor.YELLOW + "/city delete <id> - usuwa miasto o podanym ID");
+            p.sendMessage(ChatColor.YELLOW + "/city rename <nazwa> <nowa_nazwa> - zmienia nazwe miasta");
+            p.sendMessage(ChatColor.YELLOW + "/city showBorder <nazwa> - pokazuje granice miasta");
             return true;
         }
         Location playerLocation = p.getLocation();
@@ -92,11 +95,55 @@ public class CityComands implements CommandExecutor {
                 p.sendMessage(ChatColor.GREEN + "Usunięto miasto '" + removed.getName() + "' (ID=" + idToDelete + ").");
                 break;
             }
+            case "rename": {
+                if(args.length == 3) {
+                    String name = args[1];
+                    String newName = args[2];
+                    for(City city : citiesById.values()) {
+                        if(city.getName().equals(name)){
+                            city.setName(newName);
+                        }
+                    }
+                }
+                else{
+                    p.sendMessage(ChatColor.RED + "Poprawne uzycie /" + label + " rename <nazwa_przed> <nazwa_po>");
+                }
+                break;
+            }
+
+            case "showborder": {
+                if(args.length == 2){
+                    String cityName = args[1];
+                    for(City c : citiesById.values()){
+                        if(c.getName().equals(cityName)){
+                            showCityBorder(c);
+                            break;
+                        }
+                    }
+
+                }
+            }
             default:
                 p.sendMessage(ChatColor.RED + "Nieznana komenda.");
         }
         return true;
     }
+
+    public void showCityBorder(City city){
+        Location loc = city.getLocation();
+        int radius = city.getRadius();
+        World world = loc.getWorld();
+
+        int points = 120;
+
+        for(int i = 0; i < points; i++){
+            double angle = i * 2 * Math.PI / points;
+            double x = loc.getX() + radius * Math.cos(angle);
+            double z = loc.getZ() + radius * Math.sin(angle);
+            world.spawnParticle(org.bukkit.Particle.FLAME, x, loc.getY(), z, 1,0,0,0,0);
+        }
+    }
+
     public City findCityAt(Location loc) {
         if (loc == null || loc.getWorld() == null) return null;
         City found = null;
@@ -125,5 +172,20 @@ public class CityComands implements CommandExecutor {
             nextCityId = max + 1;
         }
         return nextCityId++;
+    }
+
+    private void showCityBorder(String cityName){
+        City city = citiesById.get(cityName);
+        if(city == null){
+            return;
+        }
+        Location loc = city.getLocation();
+        if(loc == null){
+            return;
+        }
+
+        int radius = city.getRadius();
+
+
     }
 }
