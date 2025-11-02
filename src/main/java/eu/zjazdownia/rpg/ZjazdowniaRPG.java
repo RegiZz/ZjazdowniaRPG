@@ -75,7 +75,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         getCommand("klasa").setExecutor(new KlasaCommand(classGUI, accountManager));
         getCommand("resetkonto").setExecutor(new ResetKontoCommand(accountManager));
         getCommand("zradmin").setExecutor(new ZRAdminCommand(this));
-        getCommand("city").setExecutor(new CityComands());
+        getCommand("city").setExecutor(new CityComands(this));
 
         getLogger().info("ZjazdowniaRPG wlaczone.");
     }
@@ -140,7 +140,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
     }
 
     private Location citySpawn(Location lastPlayerLoacation){
-        CityComands CityCommands = new CityComands();
+        CityComands CityCommands = new CityComands(this);
         City city = CityCommands.findCityAt(lastPlayerLoacation);
 
         return city.getLocation();

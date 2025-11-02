@@ -1,26 +1,33 @@
 package eu.zjazdownia.rpg.commands;
 
+import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.cities.City;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.scheduler.BukkitTask;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class CityComands implements CommandExecutor {
 
     private final Map<Integer, City> citiesById = new HashMap<>();
     private Integer nextCityId = null;
+    private final Map<Player, BukkitTask> activeBorders = new HashMap<>();
+    private final ZjazdowniaRPG plugin;
+    private final Map<UUID, BukkitTask> activeBorderTasks = new HashMap<>();
+    private final Map<UUID, List<Location>> activeBorderLocations = new HashMap<>();
+    private final Map<UUID, List<BlockData>> activeBorderOriginalData = new HashMap<>();
 
-    public CityComands() {
 
+    public CityComands(ZjazdowniaRPG plugin) {
+        this.plugin = plugin;
     }
 
     @Override
@@ -114,44 +121,95 @@ public class CityComands implements CommandExecutor {
             }
 
             case "showborder": {
-                if(args.length == 2){
+                if (args.length == 2) {
                     String cityName = args[1];
-                    for(City c : citiesById.values()){
-                        if(c.getName().equals(cityName)){
-                            showCityBorder(c);
-                            p.sendMessage(ChatColor.GREEN + "Pokazano granice miasta '" + c.getName() + "'.");
-                            break;
-                        }
+                    City targetCity = citiesById.values().stream()
+                            .filter(c -> c.getName().equalsIgnoreCase(cityName))
+                            .findFirst().orElse(null);
+
+                    if (targetCity == null) {
+                        p.sendMessage(ChatColor.RED + "Nie znaleziono miasta o nazwie '" + cityName + "'.");
+                        return true;
                     }
 
-                }
-                else{
-                    p.sendMessage(ChatColor.RED + "Poprawne uzycie /" + label + " showborder <nazwa_miasta>");
+                    UUID uuid = p.getUniqueId();
+
+                    // Jeśli już pokazujemy granice — wyłącz i przywróć bloki
+                    if (activeBorderTasks.containsKey(uuid)) {
+                        // cancel task
+                        activeBorderTasks.get(uuid).cancel();
+                        activeBorderTasks.remove(uuid);
+
+                        // przywróć oryginalne bloki
+                        List<Location> locs = activeBorderLocations.remove(uuid);
+                        List<BlockData> orig = activeBorderOriginalData.remove(uuid);
+                        if (locs != null && orig != null) {
+                            for (int i = 0; i < locs.size(); i++) {
+                                Location loc = locs.get(i);
+                                BlockData bd = orig.get(i);
+                                p.sendBlockChange(loc, bd);
+                            }
+                        }
+
+                        p.sendMessage(ChatColor.YELLOW + "Wyłączono podgląd granic miasta '" + targetCity.getName() + "'.");
+                    } else {
+                        // oblicz punkty granicy i zapamiętaj oryginalne blockdata
+                        List<Location> borderLocations = computeBorderLocations(targetCity);
+                        List<BlockData> originalData = new ArrayList<>(borderLocations.size());
+                        for (Location loc : borderLocations) {
+                            Block b = loc.getBlock();
+                            originalData.add(b.getBlockData());
+                        }
+
+                        activeBorderLocations.put(uuid, borderLocations);
+                        activeBorderOriginalData.put(uuid, originalData);
+
+                        // uruchom task, który co tick rysuje (wysyła) bloki
+                        BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+                            showCityBorderBlocks(p, borderLocations);
+                        }, 0L, 10L); // co 10 ticków
+
+                        activeBorderTasks.put(uuid, task);
+                        p.sendMessage(ChatColor.GREEN + "Pokazano granice miasta '" + targetCity.getName() + "'. Ponownie wpisz komendę, aby wyłączyć.");
+                    }
+
+                } else {
+                    p.sendMessage(ChatColor.RED + "Poprawne użycie: /" + label + " showborder <nazwa_miasta>");
                 }
                 break;
             }
+
             default:
                 p.sendMessage(ChatColor.RED + "Nieznana komenda.");
         }
         return true;
     }
 
-    public void showCityBorder(City city){
+    public List<Location> computeBorderLocations(City city) {
         Location loc = city.getLocation();
         int radius = city.getRadius();
         World world = loc.getWorld();
-
         int points = 120;
+        List<Location> list = new ArrayList<>(points);
 
-        for(int i = 0; i < points; i++){
+        for (int i = 0; i < points; i++) {
             double angle = i * 2 * Math.PI / points;
             double x = loc.getX() + radius * Math.cos(angle);
             double z = loc.getZ() + radius * Math.sin(angle);
-            Block highestBlock = world.getHighestBlockAt((int)x, (int)z);
-            double y = highestBlock.getY() + 1;
-            world.spawnParticle(Particle.FLAME, x, y, z, 1,0,0,0,0);
+            Block highest = world.getHighestBlockAt((int) x, (int) z);
+            Location borderLoc = highest.getLocation();
+            list.add(borderLoc);
+        }
+        return list;
+    }
+
+    public void showCityBorderBlocks(Player p, List<Location> borderLocations) {
+        BlockData fake = Material.LIGHT_BLUE_STAINED_GLASS.createBlockData();
+        for (Location borderLoc : borderLocations) {
+            p.sendBlockChange(borderLoc, fake);
         }
     }
+
 
     public City findCityAt(Location loc) {
         if (loc == null || loc.getWorld() == null) return null;
@@ -183,18 +241,22 @@ public class CityComands implements CommandExecutor {
         return nextCityId++;
     }
 
-    private void showCityBorder(String cityName){
-        City city = citiesById.get(cityName);
-        if(city == null){
-            return;
+    @EventHandler
+    public void onQuit(PlayerQuitEvent e) {
+        Player p = e.getPlayer();
+        UUID uuid = p.getUniqueId();
+        if (activeBorderTasks.containsKey(uuid)) {
+            activeBorderTasks.get(uuid).cancel();
+            activeBorderTasks.remove(uuid);
+
+            List<Location> locs = activeBorderLocations.remove(uuid);
+            List<BlockData> orig = activeBorderOriginalData.remove(uuid);
+            if (locs != null && orig != null) {
+                for (int i = 0; i < locs.size(); i++) {
+                    p.sendBlockChange(locs.get(i), orig.get(i));
+                }
+            }
         }
-        Location loc = city.getLocation();
-        if(loc == null){
-            return;
-        }
-
-        int radius = city.getRadius();
-
-
     }
+
 }
