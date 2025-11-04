@@ -53,7 +53,6 @@ public class LevelingListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDeath(EntityDeathEvent e) {
-        plugin.getLogger().info("EntityDeathEvent fired for: " + e.getEntityType());
         Player killer = e.getEntity().getKiller();
 
         if (killer == null) {

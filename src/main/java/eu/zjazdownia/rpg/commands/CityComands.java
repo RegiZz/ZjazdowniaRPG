@@ -10,16 +10,16 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
-public class CityComands implements CommandExecutor {
+public class CityComands implements CommandExecutor, Listener {
 
-    private final Map<Integer, City> citiesById = new HashMap<>();
+    public final Map<Integer, City> citiesById = new HashMap<>();
     private Integer nextCityId = null;
-    private final Map<Player, BukkitTask> activeBorders = new HashMap<>();
     private final ZjazdowniaRPG plugin;
     private final Map<UUID, BukkitTask> activeBorderTasks = new HashMap<>();
     private final Map<UUID, List<Location>> activeBorderLocations = new HashMap<>();
@@ -110,6 +110,7 @@ public class CityComands implements CommandExecutor {
                     String newName = args[2];
                     for(City city : citiesById.values()) {
                         if(city.getName().equals(name)){
+                            p.sendMessage(ChatColor.GREEN + "Zmieniono nazwe miasta "+ city.getName()+ " na '" + newName + "'.");
                             city.setName(newName);
                         }
                     }

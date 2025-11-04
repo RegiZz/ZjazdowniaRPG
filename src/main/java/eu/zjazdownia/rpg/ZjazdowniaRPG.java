@@ -8,6 +8,7 @@ import eu.zjazdownia.rpg.gui.AccountGUI;
 import eu.zjazdownia.rpg.gui.ClassGUI;
 import eu.zjazdownia.rpg.level.LevelManager;
 import eu.zjazdownia.rpg.level.LevelingListener;
+import eu.zjazdownia.rpg.listener.PlayerInCityListener;
 import eu.zjazdownia.rpg.listener.PlayerJoinQuitListener;
 import eu.zjazdownia.rpg.scoreboard.BoardManager;
 import eu.zjazdownia.rpg.util.ConfigUtils;
@@ -39,6 +40,8 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
     private ClassGUI classGUI;
     private LevelManager levelManager;
 
+    CityComands cityCommands = new CityComands(this);
+
     public static ZjazdowniaRPG get() { return instance; }
 
     @Override
@@ -69,13 +72,15 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(classGUI, this);
 // rejestruj LevelingListener z instancją levelManager
         getServer().getPluginManager().registerEvents(new LevelingListener(this, this.levelManager), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerInCityListener(cityCommands), this);
+        Bukkit.getPluginManager().registerEvents(cityCommands, this);
 
 // komendy
         getCommand("konto").setExecutor(new KontoCommand(accountGUI));
         getCommand("klasa").setExecutor(new KlasaCommand(classGUI, accountManager));
         getCommand("resetkonto").setExecutor(new ResetKontoCommand(accountManager));
         getCommand("zradmin").setExecutor(new ZRAdminCommand(this));
-        getCommand("city").setExecutor(new CityComands(this));
+        getCommand("city").setExecutor(cityCommands);
 
         getLogger().info("ZjazdowniaRPG wlaczone.");
     }
@@ -91,8 +96,6 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
             accountManager.flushAll();
         }
     }
-
-    private final Map<UUID, Location> pendingTeleports = new HashMap<>();
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e) {
