@@ -7,12 +7,14 @@ public class City {
     private int ID;
     private Location location;
     private int radius;
+    private int moblvl;
 
-    public City(String name, int ID, Location location, int radius) {
+    public City(String name, int ID, Location location, int radius, int moblvl) {
         this.name = name;
         this.ID = ID;
         this.location = location;
         this.radius = radius;
+        this.moblvl = moblvl;
     }
 
     public int getID() {
@@ -26,6 +28,9 @@ public class City {
     }
     public void setName(String name) {
         this.name = name;
+    }
+    public int getMoblvl() {
+        return moblvl;
     }
 
 

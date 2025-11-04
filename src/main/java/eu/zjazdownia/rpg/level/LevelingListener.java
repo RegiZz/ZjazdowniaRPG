@@ -1,7 +1,9 @@
 package eu.zjazdownia.rpg.level;
 
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -9,6 +11,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Map;
 import java.util.UUID;
@@ -72,11 +76,19 @@ public class LevelingListener implements Listener {
 
         if (killer == null) return;
 
-        int xp = levels.xpForMob(e.getEntityType());
-        plugin.getLogger().info("Configured xp for " + e.getEntityType() + " = " + xp);
-        if (xp <= 0) return;
+        int basexp = levels.xpForMob(e.getEntityType());
+        if (basexp <= 0) return;
 
-        levels.addExp(killer, xp);
-        plugin.getLogger().info("Added " + xp + " xp to " + killer.getName());
+        LivingEntity mob = e.getEntity();
+        NamespacedKey key = new NamespacedKey(plugin, "mob_level");
+        PersistentDataContainer data = mob.getPersistentDataContainer();
+
+        int mobLevel = data.getOrDefault(key, PersistentDataType.INTEGER, 1);
+
+        // Skalowanie expa zależne od levelu moba
+        int finalXp = (int) Math.round(basexp * (1.0 + (mobLevel - 1) * 0.25));
+
+        levels.addExp(killer, finalXp);
+        plugin.getLogger().info("Added " + finalXp + " xp to " + killer.getName());
     }
 }

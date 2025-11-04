@@ -8,12 +8,16 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 public class CityComands implements CommandExecutor, Listener {
@@ -40,7 +44,7 @@ public class CityComands implements CommandExecutor, Listener {
         if (args.length == 0 || args[0].toLowerCase().equals("help")) {
             p.sendMessage(ChatColor.BLUE + "Cities");
             p.sendMessage(ChatColor.YELLOW + "/city info - informacje o miastach");
-            p.sendMessage(ChatColor.YELLOW + "/city create <nazwa> <promien> - tworzy nowe miasto");
+            p.sendMessage(ChatColor.YELLOW + "/city create <nazwa> <promien> <moblvl> - tworzy nowe miasto");
             p.sendMessage(ChatColor.YELLOW + "/city delete <id> - usuwa miasto o podanym ID");
             p.sendMessage(ChatColor.YELLOW + "/city rename <nazwa> <nowa_nazwa> - zmienia nazwe miasta");
             p.sendMessage(ChatColor.YELLOW + "/city showBorder <nazwa> - pokazuje granice miasta");
@@ -62,26 +66,31 @@ public class CityComands implements CommandExecutor, Listener {
                 p.sendMessage(ChatColor.GOLD + "Środek: " + ChatColor.AQUA
                         + world + " (" + cLoc.getBlockX() + ", " + cLoc.getBlockY() + ", " + cLoc.getBlockZ() + ")");
                 p.sendMessage(ChatColor.GOLD + "Promień: " + ChatColor.AQUA + at.getRadius());
+                p.sendMessage(ChatColor.GOLD + "Lvl mob: " + ChatColor.AQUA + at.getMoblvl());
                 break;
             }
             case "create": {
-                if (args.length < 3) {
-                    p.sendMessage(ChatColor.RED + "Użycie: /" + label + " create <nazwa> <promień>");
+                if (args.length < 4) {
+                    p.sendMessage(ChatColor.RED + "Użycie: /" + label + " create <nazwa> <promień> <mobLvl>");
                     break;
                 }
                 String cityName = args[1];
                 int cityRadius;
+                int mobLvl;
                 try {
                     cityRadius = Integer.parseInt(args[2]);
+                    mobLvl =  Integer.parseInt(args[3]);
                 } catch (NumberFormatException e) {
-                    p.sendMessage(ChatColor.RED + "Promień musi być liczbą całkowitą.");
+                    p.sendMessage(ChatColor.RED + "Muszą być liczby całkowite w promieniu i lvl mobów");
                     break;
                 }
                 int id = nextId();
                 Location cityLocation = new Location(playerLocation.getWorld(), playerLocation.getX(), playerLocation.getY(), playerLocation.getZ());
-                City city = new City(cityName, id, cityLocation, cityRadius);
+                City city = new City(cityName, id, cityLocation, cityRadius, mobLvl);
                 citiesById.put(id, city);
                 p.sendMessage(ChatColor.GREEN + "Utworzono miasto '" + cityName + "' z ID=" + id + " i promieniem " + cityRadius + ".");
+                p.sendMessage(ChatColor.GRAY + "Level mobów ustawiony na " + ChatColor.GOLD + mobLvl);
+                saveCities();
                 break;
             }
             case "delete": {
@@ -102,6 +111,7 @@ public class CityComands implements CommandExecutor, Listener {
                     break;
                 }
                 p.sendMessage(ChatColor.GREEN + "Usunięto miasto '" + removed.getName() + "' (ID=" + idToDelete + ").");
+                saveCities();
                 break;
             }
             case "rename": {
@@ -114,6 +124,7 @@ public class CityComands implements CommandExecutor, Listener {
                             city.setName(newName);
                         }
                     }
+                    saveCities();
                 }
                 else{
                     p.sendMessage(ChatColor.RED + "Poprawne uzycie /" + label + " rename <nazwa_przed> <nazwa_po>");
@@ -259,5 +270,67 @@ public class CityComands implements CommandExecutor, Listener {
             }
         }
     }
+
+
+    // zapis miast do pliku cities.yml
+    public void saveCities() {
+        File file = new File(plugin.getDataFolder(), "cities.yml");
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
+
+        cfg.set("cities", null); // wyczyść stare dane
+
+        for (City city : citiesById.values()) {
+            String path = "cities." + city.getID();
+            cfg.set(path + ".name", city.getName());
+            cfg.set(path + ".world", city.getLocation().getWorld().getName());
+            cfg.set(path + ".x", city.getLocation().getX());
+            cfg.set(path + ".y", city.getLocation().getY());
+            cfg.set(path + ".z", city.getLocation().getZ());
+            cfg.set(path + ".radius", city.getRadius());
+            cfg.set(path + ".moblvl", city.getMoblvl());
+        }
+
+        try {
+            cfg.save(file);
+        } catch (IOException e) {
+            plugin.getLogger().severe("Nie udało się zapisać cities.yml: " + e.getMessage());
+        }
+    }
+
+    // wczytywanie miast z pliku cities.yml
+    public void loadCities() {
+        File file = new File(plugin.getDataFolder(), "cities.yml");
+        if (!file.exists()) return;
+
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
+
+        citiesById.clear();
+
+        if (!cfg.isConfigurationSection("cities")) return;
+
+        for (String key : cfg.getConfigurationSection("cities").getKeys(false)) {
+            try {
+                int id = Integer.parseInt(key);
+                String name = cfg.getString("cities." + key + ".name", "Unknown");
+                String worldName = cfg.getString("cities." + key + ".world", "world");
+                World world = Bukkit.getWorld(worldName);
+                if (world == null) continue;
+
+                double x = cfg.getDouble("cities." + key + ".x");
+                double y = cfg.getDouble("cities." + key + ".y");
+                double z = cfg.getDouble("cities." + key + ".z");
+                int radius = cfg.getInt("cities." + key + ".radius");
+                int moblvl = cfg.getInt("cities." + key + ".moblvl");
+
+                City city = new City(name, id, new Location(world, x, y, z), radius, moblvl);
+                citiesById.put(id, city);
+            } catch (Exception ex) {
+                plugin.getLogger().warning("Błąd przy wczytywaniu miasta " + key + ": " + ex.getMessage());
+            }
+        }
+
+        plugin.getLogger().info("Wczytano " + citiesById.size() + " miast z cities.yml");
+    }
+
 
 }

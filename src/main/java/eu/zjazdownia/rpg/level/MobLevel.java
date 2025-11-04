@@ -17,10 +17,10 @@ public class MobLevel {
     private int level;
 
     // proste parametry skali
-    private double baseHealth = 20.0;          // bazowe HP
-    private double healthPerLevel = 2.0;       // +HP na poziom
-    private double baseAttack = 2.0;           // bazowy atak (2 dmg to 1 serce)
-    private double attackPerLevel = 0.5;       // +atak na poziom
+    private double baseHealth;          // bazowe HP
+    private double healthPerLevel = 0.2;       // +HP na poziom
+    private double baseAttack;           // bazowy atak (2 dmg to 1 serce)
+    private double attackPerLevel = 0.15;       // +atak na poziom
 
     public MobLevel(EntityType type, int level) {
         this.type = Objects.requireNonNull(type, "type");
@@ -37,49 +37,40 @@ public class MobLevel {
 
     public void setLevel(int level) { this.level = Math.max(1, level); }
 
-    public double getBaseHealth() { return baseHealth; }
-    public void setBaseHealth(double baseHealth) { this.baseHealth = Math.max(1.0, baseHealth); }
-
-    public double getHealthPerLevel() { return healthPerLevel; }
-    public void setHealthPerLevel(double healthPerLevel) { this.healthPerLevel = Math.max(0.0, healthPerLevel); }
-
-    public double getBaseAttack() { return baseAttack; }
-    public void setBaseAttack(double baseAttack) { this.baseAttack = Math.max(0.0, baseAttack); }
-
-    public double getAttackPerLevel() { return attackPerLevel; }
-    public void setAttackPerLevel(double attackPerLevel) { this.attackPerLevel = Math.max(0.0, attackPerLevel); }
 
     /**
      * Zastosuj poziom do podanego moba: ustawia max HP (i aktualne HP proporcjonalnie) oraz obrażenia ataku.
      */
     public void applyTo(LivingEntity mob) {
-        if (mob == null || mob.getType() != this.type) return;
+        if (mob == null) return;
+
+        // Zainicjuj bazowe statystyki z oryginalnego moba
+        initBaseStats(mob);
 
         // HEALTH
         AttributeInstance maxHp = mob.getAttribute(Attribute.GENERIC_MAX_HEALTH);
         if (maxHp != null) {
-            double targetMax = computeMaxHealth();
+            double base = baseHealth;
+            double targetMax = base * (1.0 + (level - 1) * healthPerLevel);
             double prevMax = maxHp.getBaseValue();
             double current = Math.min(mob.getHealth(), prevMax);
             double percent = prevMax > 0 ? current / prevMax : 1.0;
 
             maxHp.setBaseValue(targetMax);
-            double newHealth = Math.max(1.0, Math.min(targetMax, targetMax * percent));
-            mob.setHealth(newHealth);
+            mob.setHealth(Math.max(1.0, targetMax * percent));
         }
 
         // ATTACK DAMAGE
         AttributeInstance atk = mob.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
         if (atk != null) {
-            // usuń poprzedni nasz modifier (jeśli istnieje)
             atk.getModifiers().stream()
                     .filter(m -> m.getUniqueId().equals(MOD_UUID_MOB_ATTACK))
                     .toList()
                     .forEach(atk::removeModifier);
 
-            double base = atk.getBaseValue(); // bazowa wartość bytu
-            double desired = computeAttackDamage();
-            double addNumber = Math.max(0.0, desired - base);
+            double base = baseAttack;
+            double desired = base * (1.0 + (level - 1) * attackPerLevel);
+            double addNumber = Math.max(0.0, desired - atk.getBaseValue());
 
             if (addNumber != 0.0) {
                 AttributeModifier mod = new AttributeModifier(
@@ -91,6 +82,16 @@ public class MobLevel {
                 atk.addModifier(mod);
             }
         }
+    }
+
+    private void initBaseStats(LivingEntity mob) {
+        if (mob == null) return;
+
+        AttributeInstance hp = mob.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+        baseHealth = (hp != null) ? hp.getBaseValue() : 20.0;
+
+        AttributeInstance atk = mob.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
+        baseAttack = (atk != null) ? atk.getBaseValue() : 2.0;
     }
 
     public double computeMaxHealth() {

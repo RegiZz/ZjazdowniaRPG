@@ -8,6 +8,7 @@ import eu.zjazdownia.rpg.gui.AccountGUI;
 import eu.zjazdownia.rpg.gui.ClassGUI;
 import eu.zjazdownia.rpg.level.LevelManager;
 import eu.zjazdownia.rpg.level.LevelingListener;
+import eu.zjazdownia.rpg.listener.MobSpawnListener;
 import eu.zjazdownia.rpg.listener.PlayerInCityListener;
 import eu.zjazdownia.rpg.listener.PlayerJoinQuitListener;
 import eu.zjazdownia.rpg.scoreboard.BoardManager;
@@ -62,6 +63,8 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
 // inicjalizuj levelManager przed rejestracją listenerów, żeby inne klasy mogły z niego korzystać
         this.levelManager = new LevelManager(this);
 
+        cityCommands.loadCities();
+
 // rejestracja listenerów
         Bukkit.getPluginManager().registerEvents(new PlayerJoinQuitListener(this), this);
 // jeśli chcesz trzymać referencję do ClassAbilities, możesz utworzyć instancję i zarejestrować ją:
@@ -74,6 +77,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(new LevelingListener(this, this.levelManager), this);
         Bukkit.getPluginManager().registerEvents(new PlayerInCityListener(cityCommands), this);
         Bukkit.getPluginManager().registerEvents(cityCommands, this);
+        Bukkit.getPluginManager().registerEvents(new MobSpawnListener(cityCommands, this), this);
 
 // komendy
         getCommand("konto").setExecutor(new KontoCommand(accountGUI));
@@ -91,6 +95,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         for (Player p : Bukkit.getOnlinePlayers()) {
             accountManager.saveLastLocation(p.getUniqueId(), p.getLocation());
             accountManager.flush(p.getUniqueId());
+            cityCommands.saveCities();
         }
         if (accountManager != null) {
             accountManager.flushAll();
