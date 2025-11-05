@@ -27,7 +27,11 @@ public class MobSpawnListener implements Listener {
         LivingEntity mob = e.getEntity();
 
         City city = cityCommands.findCityAt(mob.getLocation());
-        if (city == null) return;
+        if (city == null) {
+            mob.setCustomName("§7[1]" + " §c" + mob.getType().name());
+            mob.setCustomNameVisible(true);
+            return;
+        };
 
         int mobLevelValue = city.getMoblvl();
 

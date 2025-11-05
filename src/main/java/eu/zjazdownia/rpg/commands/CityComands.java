@@ -47,7 +47,7 @@ public class CityComands implements CommandExecutor, Listener {
             p.sendMessage(ChatColor.YELLOW + "/city create <nazwa> <promien> <moblvl> - tworzy nowe miasto");
             p.sendMessage(ChatColor.YELLOW + "/city delete <id> - usuwa miasto o podanym ID");
             p.sendMessage(ChatColor.YELLOW + "/city rename <nazwa> <nowa_nazwa> - zmienia nazwe miasta");
-            p.sendMessage(ChatColor.YELLOW + "/city showBorder <nazwa> - pokazuje granice miasta");
+            p.sendMessage(ChatColor.YELLOW + "/city showborder <nazwa> - pokazuje granice miasta");
             return true;
         }
         Location playerLocation = p.getLocation();
@@ -201,17 +201,27 @@ public class CityComands implements CommandExecutor, Listener {
         Location loc = city.getLocation();
         int radius = city.getRadius();
         World world = loc.getWorld();
-        int points = 120;
+
+        // 1 punkt na każdy blok długości obwodu
+        int points = (int) Math.ceil(2 * Math.PI * radius);
+
         List<Location> list = new ArrayList<>(points);
+        Set<Block> addedBlocks = new HashSet<>(); // zapobiegnie duplikatom
 
         for (int i = 0; i < points; i++) {
             double angle = i * 2 * Math.PI / points;
             double x = loc.getX() + radius * Math.cos(angle);
             double z = loc.getZ() + radius * Math.sin(angle);
-            Block highest = world.getHighestBlockAt((int) x, (int) z);
-            Location borderLoc = highest.getLocation();
-            list.add(borderLoc);
+
+            int bx = (int) Math.round(x);
+            int bz = (int) Math.round(z);
+
+            Block highest = world.getHighestBlockAt(bx, bz);
+            if (addedBlocks.add(highest)) { // jeśli jeszcze nie dodany
+                list.add(highest.getLocation());
+            }
         }
+
         return list;
     }
 

@@ -98,14 +98,6 @@ public class ClassGUI implements Listener {
         p.sendMessage(ChatColor.GREEN + "Wybrałeś klasę: " + ChatColor.translateAlternateColorCodes('&',
                 plugin.getConfig().getString("classes." + key.toLowerCase(Locale.ROOT) + ".display")));
 
-// teleport na lokalizację z configu
-        ConfigurationSection spawnSec = plugin.getConfig().getConfigurationSection("classes." + key + ".spawn");
-        if (spawnSec != null) {
-            Location dest = LocUtil.fromSection(spawnSec);
-            if (dest != null && dest.getWorld() != null) {
-                p.teleport(dest);
-            }
-        }
 
 // daj podstawowe przedmioty w zależności od klasy
         giveStarterKit(p, key);
