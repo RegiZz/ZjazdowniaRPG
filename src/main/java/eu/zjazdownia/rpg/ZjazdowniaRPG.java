@@ -9,6 +9,7 @@ import eu.zjazdownia.rpg.gui.ClassGUI;
 import eu.zjazdownia.rpg.level.LevelManager;
 import eu.zjazdownia.rpg.level.LevelingListener;
 import eu.zjazdownia.rpg.listener.MobSpawnListener;
+import eu.zjazdownia.rpg.listener.NLoginListener;
 import eu.zjazdownia.rpg.listener.PlayerInCityListener;
 import eu.zjazdownia.rpg.listener.PlayerJoinQuitListener;
 import eu.zjazdownia.rpg.scoreboard.BoardManager;
@@ -76,6 +77,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(new PlayerInCityListener(cityCommands), this);
         Bukkit.getPluginManager().registerEvents(cityCommands, this);
         Bukkit.getPluginManager().registerEvents(new MobSpawnListener(cityCommands, this), this);
+        Bukkit.getPluginManager().registerEvents(new NLoginListener(this, this.accountGUI),  this);
 
 // komendy
         getCommand("konto").setExecutor(new KontoCommand(accountGUI));
@@ -134,15 +136,6 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
                 Bukkit.getScheduler().runTask(this, () -> p.teleport(loc));
             }
         }
-
-
-        Bukkit.getScheduler().runTaskLater(this, () -> {
-            if (accountManager.getSelectedClass(id) == null) {
-                accountGUI.openFor(p);
-            } else {
-                boardManager.show(p, accountManager);
-            }
-        }, 10L);
     }
 
     private Location citySpawn(Location lastPlayerLoacation){
@@ -157,6 +150,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         Player p = e.getPlayer();
         accountManager.saveLastLocation(p.getUniqueId(), p.getLocation());
         boardManager.hide(p);
+        accountManager.saveInventory(p.getUniqueId(), accountManager.getCurrentAccount(p.getUniqueId()), p.getInventory().getContents());
         accountManager.flush(p.getUniqueId());
     }
 

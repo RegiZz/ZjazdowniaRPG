@@ -34,6 +34,7 @@ public class AccountGUI implements Listener {
                 plugin.getConfig().getString("gui.account.title")));
 
         AccountManager am = plugin.accounts();
+        p.getInventory().clear();
 
         // --- Konto 1 ---
         int idx1 = 1;
@@ -114,6 +115,12 @@ public class AccountGUI implements Listener {
     private void selectAccount(Player p, int idx) {
         AccountManager am = plugin.accounts();
         am.setCurrentAccount(p.getUniqueId(), idx);
+
+        // Przywróć ekwipunek dla nowego konta
+        ItemStack[] inv = am.getInventory(p.getUniqueId(), idx);
+        if(inv == null) inv = new ItemStack[36];
+        p.getInventory().clear();
+        p.getInventory().setContents(inv);
 
         p.closeInventory();
         p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.2f);

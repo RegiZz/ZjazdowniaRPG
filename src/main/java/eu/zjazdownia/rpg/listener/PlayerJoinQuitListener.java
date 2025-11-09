@@ -22,5 +22,6 @@ public class PlayerJoinQuitListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         plugin.accounts().flush(e.getPlayer().getUniqueId());
+
     }
 }

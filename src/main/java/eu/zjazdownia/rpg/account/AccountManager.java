@@ -4,6 +4,7 @@ import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.util.LocUtil;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
@@ -110,5 +111,36 @@ public class AccountManager {
         cache.get(id).set(path(id, "class"), null);
         cache.get(id).set(path(id, "level"), 1);
         cache.get(id).set(path(id, "exp"), 0); // reset exp
+    }
+
+    public void saveInventory(UUID id, int accountIdx, ItemStack[] contents) {
+        ensureLoaded(id);
+        List<Map<String, Object>> serialized = new ArrayList<>();
+        for (ItemStack item : contents) {
+            if (item == null) {
+                serialized.add(null);
+            } else {
+                serialized.add(item.serialize());
+            }
+        }
+        cache.get(id).set("accounts." + accountIdx + ".inventory", serialized);
+    }
+
+
+    @SuppressWarnings("unchecked")
+    public ItemStack[] getInventory(UUID id, int accountIdx) {
+        ensureLoaded(id);
+        List<?> list = cache.get(id).getList("accounts." + accountIdx + ".inventory");
+        if (list == null) return new ItemStack[36]; // pusty ekwipunek
+        ItemStack[] inv = new ItemStack[36];
+        for (int i = 0; i < Math.min(list.size(), 36); i++) {
+            Object o = list.get(i);
+            if (o instanceof Map<?, ?> map) {
+                inv[i] = ItemStack.deserialize((Map<String, Object>) map);
+            } else {
+                inv[i] = null;
+            }
+        }
+        return inv;
     }
 }
