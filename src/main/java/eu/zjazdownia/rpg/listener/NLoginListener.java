@@ -23,7 +23,6 @@ public class NLoginListener implements Listener {
 
     @EventHandler
     public void onLogin(LoginEvent e) {
-        plugin.getLogger().info(e.getPlayer().getName() + "zalogowal sie");
         Player p = e.getPlayer();
 
         Bukkit.getScheduler().runTask(plugin, () -> {
@@ -33,7 +32,6 @@ public class NLoginListener implements Listener {
 
     @EventHandler
     public void onLogin(PremiumLoginEvent e) {
-        plugin.getLogger().info(e.getPlayer().getName() + "zalogowal sie");
         Player p = e.getPlayer();
 
         Bukkit.getScheduler().runTask(plugin, () -> {
@@ -43,7 +41,6 @@ public class NLoginListener implements Listener {
 
     @EventHandler
     public void onLogin(SessionLoginEvent e) {
-        plugin.getLogger().info(e.getPlayer().getName() + "zalogowal sie");
         Player p = e.getPlayer();
 
         Bukkit.getScheduler().runTask(plugin, () -> {

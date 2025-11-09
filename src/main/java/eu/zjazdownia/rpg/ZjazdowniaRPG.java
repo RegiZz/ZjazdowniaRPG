@@ -12,6 +12,7 @@ import eu.zjazdownia.rpg.listener.MobSpawnListener;
 import eu.zjazdownia.rpg.listener.NLoginListener;
 import eu.zjazdownia.rpg.listener.PlayerInCityListener;
 import eu.zjazdownia.rpg.listener.PlayerJoinQuitListener;
+import eu.zjazdownia.rpg.magicItems.Heartstone;
 import eu.zjazdownia.rpg.scoreboard.BoardManager;
 import eu.zjazdownia.rpg.util.ConfigUtils;
 import net.kyori.adventure.text.Component;
@@ -41,6 +42,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
     private AccountGUI accountGUI;
     private ClassGUI classGUI;
     private LevelManager levelManager;
+    private Heartstone  heartstone;
 
     CityComands cityCommands = new CityComands(this);
 
@@ -58,6 +60,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         this.boardManager = new BoardManager(this);
         this.accountGUI = new AccountGUI(this);
         this.classGUI = new ClassGUI(this);
+        this.heartstone = new Heartstone(this, cityCommands);
 
 // inicjalizuj levelManager przed rejestracją listenerów, żeby inne klasy mogły z niego korzystać
         this.levelManager = new LevelManager(this);
@@ -78,6 +81,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(cityCommands, this);
         Bukkit.getPluginManager().registerEvents(new MobSpawnListener(cityCommands, this), this);
         Bukkit.getPluginManager().registerEvents(new NLoginListener(this, this.accountGUI),  this);
+        Bukkit.getPluginManager().registerEvents(this.heartstone, this);
 
 // komendy
         getCommand("konto").setExecutor(new KontoCommand(accountGUI));

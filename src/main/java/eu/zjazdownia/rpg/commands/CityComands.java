@@ -361,5 +361,28 @@ public class CityComands implements CommandExecutor, Listener {
         plugin.getLogger().info("Wczytano " + citiesById.size() + " miast z cities.yml");
     }
 
+    public City findNearestCity(Location loc) {
+        if (loc == null || loc.getWorld() == null) return null;
+        City nearest = null;
+        double bestDistance = Double.MAX_VALUE;
+
+        for (City city : citiesById.values()) {
+            Location center = city.getLocation();
+            if (center == null || center.getWorld() == null) continue;
+            if (!center.getWorld().equals(loc.getWorld())) continue;
+
+            double dx = loc.getX() - center.getX();
+            double dz = loc.getZ() - center.getZ();
+            double distance = Math.hypot(dx, dz);
+
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                nearest = city;
+            }
+        }
+
+        return nearest;
+    }
+
 
 }

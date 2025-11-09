@@ -2,6 +2,7 @@ package eu.zjazdownia.rpg.gui;
 
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.account.AccountManager;
+import eu.zjazdownia.rpg.magicItems.Heartstone;
 import eu.zjazdownia.rpg.scoreboard.BoardManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -125,6 +126,18 @@ public class AccountGUI implements Listener {
         p.closeInventory();
         p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.2f);
         p.sendMessage(ChatColor.GREEN + "✅ Wybrano konto #" + idx + "!");
+
+        boolean hasHeartstone = false;
+        for (ItemStack item : p.getInventory().getContents()) {
+            if (item != null && item.isSimilar(Heartstone.createHeartstone())) {
+                hasHeartstone = true;
+                break;
+            }
+        }
+
+        if (!hasHeartstone) {
+            p.getInventory().addItem(Heartstone.createHeartstone());
+        }
 
         if (am.getSelectedClass(p.getUniqueId()) == null) {
             plugin.classGUI().openFor(p);
