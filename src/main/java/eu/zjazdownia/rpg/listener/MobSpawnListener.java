@@ -4,7 +4,9 @@ import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.cities.City;
 import eu.zjazdownia.rpg.level.MobLevel;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Animals;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import eu.zjazdownia.rpg.commands.CityComands;
@@ -25,6 +27,10 @@ public class MobSpawnListener implements Listener {
     @EventHandler
     public void onMobSpawn(CreatureSpawnEvent e) {
         LivingEntity mob = e.getEntity();
+
+        if(mob instanceof Animals || mob instanceof Player) {
+            return;
+        }
 
         City city = cityCommands.findCityAt(mob.getLocation());
         if (city == null) {

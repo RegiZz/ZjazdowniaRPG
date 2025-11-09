@@ -17,6 +17,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,21 +33,53 @@ public class AccountGUI implements Listener {
         Inventory inv = Bukkit.createInventory(null, 9, ChatColor.translateAlternateColorCodes('&',
                 plugin.getConfig().getString("gui.account.title")));
 
-        // Slot 1 – darmowy
+        AccountManager am = plugin.accounts();
+
+        // --- Konto 1 ---
+        int idx1 = 1;
+        am.setCurrentAccount(p.getUniqueId(), idx1);
+        String clazz1 = am.getSelectedClass(p.getUniqueId());
+        int level1 = am.getLevel(p.getUniqueId());
+        int exp1 = am.getExp(p.getUniqueId());
+
+        List<String> lore1 = new ArrayList<>(plugin.getConfig().getStringList("gui.account.free.lore"));
+        lore1.add("");
+        lore1.add(ChatColor.GRAY + "Klasa: " + ChatColor.YELLOW + (clazz1 == null ? "—" : clazz1));
+        lore1.add(ChatColor.GRAY + "Poziom: " + ChatColor.GREEN + level1);
+        lore1.add(ChatColor.GRAY + "Doświadczenie: " + ChatColor.AQUA + exp1);
+
         inv.setItem(3, makeItem(
                 Material.valueOf(plugin.getConfig().getString("gui.account.free.icon")),
                 plugin.getConfig().getString("gui.account.free.name"),
-                plugin.getConfig().getStringList("gui.account.free.lore")
+                lore1
         ));
 
-        // Slot 2 – płatny (zablokowany jeśli brak permisji)
+        // --- Konto 2 ---
+        int idx2 = 2;
         boolean unlocked = p.hasPermission("zjazdownia.account.2");
         String icon = plugin.getConfig().getString(unlocked ? "gui.account.paid.icon_unlocked" : "gui.account.paid.icon_locked");
-        inv.setItem(5, makeItem(
-                Material.valueOf(icon),
-                plugin.getConfig().getString(unlocked ? "gui.account.paid.name_unlocked" : "gui.account.paid.name_locked"),
-                plugin.getConfig().getStringList(unlocked ? "gui.account.paid.lore_unlocked" : "gui.account.paid.lore_locked")
+        String name = plugin.getConfig().getString(unlocked ? "gui.account.paid.name_unlocked" : "gui.account.paid.name_locked");
+
+        List<String> lore2 = new ArrayList<>(plugin.getConfig().getStringList(
+                unlocked ? "gui.account.paid.lore_unlocked" : "gui.account.paid.lore_locked"
         ));
+
+        if (unlocked) {
+            am.setCurrentAccount(p.getUniqueId(), idx2);
+            String clazz2 = am.getSelectedClass(p.getUniqueId());
+            int level2 = am.getLevel(p.getUniqueId());
+            int exp2 = am.getExp(p.getUniqueId());
+
+            lore2.add("");
+            lore2.add(ChatColor.GRAY + "Klasa: " + ChatColor.YELLOW + (clazz2 == null ? "—" : clazz2));
+            lore2.add(ChatColor.GRAY + "Poziom: " + ChatColor.GREEN + level2);
+            lore2.add(ChatColor.GRAY + "Doświadczenie: " + ChatColor.AQUA + exp2);
+        }
+
+        inv.setItem(5, makeItem(Material.valueOf(icon), name, lore2));
+
+        // Przywróć obecne konto po przygotowaniu GUI
+        am.setCurrentAccount(p.getUniqueId(), am.getCurrentAccount(p.getUniqueId()));
 
         p.openInventory(inv);
     }
@@ -82,13 +115,14 @@ public class AccountGUI implements Listener {
         AccountManager am = plugin.accounts();
         am.setCurrentAccount(p.getUniqueId(), idx);
 
-        // jeśli klasa nie wybrana – otwórz kreator, w przeciwnym razie pokaż scoreboard
+        p.closeInventory();
+        p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.2f);
+        p.sendMessage(ChatColor.GREEN + "✅ Wybrano konto #" + idx + "!");
+
         if (am.getSelectedClass(p.getUniqueId()) == null) {
             plugin.classGUI().openFor(p);
         } else {
             plugin.board().show(p, am);
-            p.closeInventory();
-            p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.2f);
         }
     }
 }

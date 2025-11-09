@@ -43,8 +43,6 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
 
     CityComands cityCommands = new CityComands(this);
 
-    public static ZjazdowniaRPG get() { return instance; }
-
     @Override
     public void onEnable() {
         instance = this;

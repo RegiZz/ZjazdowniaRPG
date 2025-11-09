@@ -2,6 +2,9 @@ package eu.zjazdownia.rpg.commands;
 
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.cities.City;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
@@ -28,6 +31,7 @@ public class CityComands implements CommandExecutor, Listener {
     private final Map<UUID, BukkitTask> activeBorderTasks = new HashMap<>();
     private final Map<UUID, List<Location>> activeBorderLocations = new HashMap<>();
     private final Map<UUID, List<BlockData>> activeBorderOriginalData = new HashMap<>();
+    private static final MiniMessage mm = MiniMessage.miniMessage();
 
 
     public CityComands(ZjazdowniaRPG plugin) {
@@ -187,6 +191,21 @@ public class CityComands implements CommandExecutor, Listener {
 
                 } else {
                     p.sendMessage(ChatColor.RED + "Poprawne użycie: /" + label + " showborder <nazwa_miasta>");
+                }
+                break;
+            }
+
+            case "list": {
+                Component separator = mm.deserialize("<gradient:#ff00ff:#00ffff>============================</gradient>");
+                Component cityListMessage = mm.deserialize("<gradient:#ff00ff:#00ffff>=========Lista Miast==========</gradient>");
+                p.sendMessage(cityListMessage);
+                for(City c : citiesById.values()){
+                    Location l = c.getLocation();
+                    p.sendMessage(ChatColor.GOLD + "Miasto: " + ChatColor.AQUA + c.getName());
+                    p.sendMessage(ChatColor.GOLD + "Środek: " + ChatColor.AQUA
+                            + l.getWorld().getName() + " (" + l.getBlockX() + ", " + l.getBlockY() + ", " + l.getBlockZ() + ")");
+                    p.sendMessage(ChatColor.GOLD + "Promien: " +  ChatColor.AQUA + c.getRadius());
+                    p.sendMessage(separator);
                 }
                 break;
             }
