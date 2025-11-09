@@ -52,6 +52,7 @@ public class CityComands implements CommandExecutor, Listener {
             p.sendMessage(ChatColor.YELLOW + "/city delete <id> - usuwa miasto o podanym ID");
             p.sendMessage(ChatColor.YELLOW + "/city rename <nazwa> <nowa_nazwa> - zmienia nazwe miasta");
             p.sendMessage(ChatColor.YELLOW + "/city showborder <nazwa> - pokazuje granice miasta");
+            p.sendMessage(ChatColor.YELLOW + "/city list - wyświetla liste miast");
             return true;
         }
         Location playerLocation = p.getLocation();
