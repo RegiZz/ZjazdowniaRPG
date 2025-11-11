@@ -5,31 +5,29 @@ import eu.zjazdownia.rpg.cities.City;
 import eu.zjazdownia.rpg.commands.CityComands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.UUID;
+import java.util.*;
 
 public class Heartstone implements Listener {
 
     private final ZjazdowniaRPG plugin;
     private final CityComands cityCommands;
-    private final HashMap<UUID, Long> cooldowns = new HashMap<>();
+    private final Map<UUID, Long> cooldowns = new HashMap<>();
+    private final Set<UUID> teleporting = new HashSet<>();
     private static final MiniMessage mm = MiniMessage.miniMessage();
 
     private final long COOLDOWN_MS = 30_000; // 30 sekund
+    private final int TELEPORT_DELAY = 10; // sekundy na odliczanie
 
     public Heartstone(ZjazdowniaRPG plugin, CityComands cityCommands) {
         this.plugin = plugin;
@@ -58,7 +56,8 @@ public class Heartstone implements Listener {
         if (!item.hasItemMeta() || !item.getItemMeta().hasDisplayName()) return;
         if (!item.getItemMeta().getDisplayName().contains("Heartstone")) return;
 
-        // Sprawdzenie cooldownu
+        e.setCancelled(true);
+
         UUID uuid = player.getUniqueId();
         long now = System.currentTimeMillis();
         long end = cooldowns.getOrDefault(uuid, 0L);
@@ -66,34 +65,88 @@ public class Heartstone implements Listener {
         if (now < end) {
             long secondsLeft = (end - now) / 1000;
             player.sendMessage(ChatColor.RED + "Musisz poczekać " + secondsLeft + " sekund, aby ponownie użyć Heartstone!");
-            e.setCancelled(true);
             return;
         }
 
-        // Szukamy najbliższego miasta
         City nearest = cityCommands.findNearestCity(player.getLocation());
         if (nearest == null) {
             player.sendMessage(ChatColor.RED + "Nie znaleziono żadnego miasta w pobliżu!");
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-            e.setCancelled(true);
             return;
         }
 
-        // Teleportacja do środka miasta
-        Location center = nearest.getLocation();
-        player.teleport(center);
-        Component teleport = mm.deserialize("<gradient:#00FF00:#55FF55:#AAFF55:#00AA00>☑ Teleportowano do najbliższego miasta: </gradient>" +"<gradient:#ff00ff:#00ffff>" +nearest.getName() + "</gradient>");
-        player.sendMessage(teleport);
-        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
-
-        // Ustawienie cooldownu
-        cooldowns.put(uuid, now + COOLDOWN_MS);
-
-        e.setCancelled(true);
+        // Rozpocznij odliczanie
+        startTeleportCountdown(player, nearest);
     }
 
+    private void startTeleportCountdown(Player player, City city) {
+        UUID uuid = player.getUniqueId();
+        teleporting.add(uuid);
+        player.sendMessage(ChatColor.AQUA + "Rozpoczynasz teleportację do " + ChatColor.LIGHT_PURPLE + city.getName() + ChatColor.AQUA + "...");
+        player.sendMessage(ChatColor.GRAY + "Nie ruszaj się przez " + TELEPORT_DELAY + " sekund!");
+
+        Location startLoc = player.getLocation().clone();
+
+        Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
+            int secondsLeft = TELEPORT_DELAY;
+
+            @Override
+            public void run() {
+                if (!player.isOnline() || !teleporting.contains(uuid)) {
+                    teleporting.remove(uuid);
+                    return;
+                }
+
+                if (secondsLeft <= 0 && teleporting.contains(uuid)) {
+                    teleporting.remove(uuid);
+                    Location dest = city.getLocation();
+                    player.teleport(dest);
+                    Component teleport = mm.deserialize("<gradient:#00FF00:#55FF55:#AAFF55:#00AA00>☑ Teleportowano do miasta: </gradient>"
+                            + "<gradient:#ff00ff:#00ffff>" + city.getName() + "</gradient>");
+                    player.sendMessage(teleport);
+                    player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
+
+                    // cooldown
+                    cooldowns.put(uuid, System.currentTimeMillis() + COOLDOWN_MS);
+                    player.sendMessage(ChatColor.GRAY + "(Heartstone dostępny ponownie za 30 sekund)");
+                    Bukkit.getScheduler().cancelTask(this.hashCode());
+                    return;
+                }
+
+                // Pokazanie odliczania nad hotbarem (ActionBar)
+                String legacy = "§eTeleportacja za §6" + secondsLeft + "s §7- §oNie ruszaj się!";
+                player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(legacy));
+
+                secondsLeft--;
+            }
+
+            @Override
+            public int hashCode() {
+                return uuid.hashCode() ^ city.getName().hashCode();
+            }
+        }, 0L, 20L);
+    }
+
+    private boolean hasMovedSignificantly(Location from, Location to) {
+        if (from == null || to == null) return false;
+        if (!from.getWorld().equals(to.getWorld())) return true;
+        double dx = from.getX() - to.getX();
+        double dy = from.getY() - to.getY();
+        double dz = from.getZ() - to.getZ();
+        return (dx * dx + dy * dy + dz * dz) > 0.01;
+    }
+
+    // Jeśli gracz się ruszy — przerwij teleport
     @EventHandler
-    public void onQuit(PlayerQuitEvent e) {
-        cooldowns.remove(e.getPlayer().getUniqueId());
+    public void onMove(PlayerMoveEvent e) {
+        Player p = e.getPlayer();
+        if (teleporting.contains(p.getUniqueId())) {
+            if (hasMovedSignificantly(e.getFrom(), e.getTo())) {
+                cooldowns.remove(p.getUniqueId());
+                teleporting.remove(p.getUniqueId());
+                p.sendMessage(ChatColor.RED + "❌ Teleportacja przerwana – poruszyłeś się!");
+                p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            }
+        }
     }
 }

@@ -95,7 +95,7 @@ public class ClassGUI implements Listener {
 
         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
         p.closeInventory();
-        p.sendMessage(ChatColor.GREEN + "Wybrałeś klasę: " + ChatColor.translateAlternateColorCodes('&',
+        p.sendMessage(ChatColor.GREEN + "☑ Wybrałeś klasę: " + ChatColor.translateAlternateColorCodes('&',
                 plugin.getConfig().getString("classes." + key.toLowerCase(Locale.ROOT) + ".display")));
 
 

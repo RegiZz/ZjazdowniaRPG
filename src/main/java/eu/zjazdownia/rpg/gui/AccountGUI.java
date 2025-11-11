@@ -125,7 +125,7 @@ public class AccountGUI implements Listener {
 
         p.closeInventory();
         p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.2f);
-        p.sendMessage(ChatColor.GREEN + "✅ Wybrano konto #" + idx + "!");
+        p.sendMessage(ChatColor.GREEN + "☑ Wybrano konto #" + idx + "!");
 
         boolean hasHeartstone = false;
         for (ItemStack item : p.getInventory().getContents()) {
