@@ -3,6 +3,7 @@ package eu.zjazdownia.rpg.gui;
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.account.AccountManager;
 import eu.zjazdownia.rpg.magicItems.Heartstone;
+import eu.zjazdownia.rpg.party.PartyManager;
 import eu.zjazdownia.rpg.scoreboard.BoardManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -142,7 +143,7 @@ public class AccountGUI implements Listener {
         if (am.getSelectedClass(p.getUniqueId()) == null) {
             plugin.classGUI().openFor(p);
         } else {
-            plugin.board().show(p, am);
+            plugin.board().show(p, am, new PartyManager(plugin));
         }
     }
 }

@@ -7,6 +7,9 @@ website: https://zjazdownia.eu
 depend: [nLogin]
 
 commands:
+  party:
+    description: Komenda do zarządzania party
+    usage: /party <arg>
   konto:
     description: Otwiera GUI wyboru konta.
     usage: /konto

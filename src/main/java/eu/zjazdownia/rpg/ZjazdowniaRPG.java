@@ -13,6 +13,7 @@ import eu.zjazdownia.rpg.listener.NLoginListener;
 import eu.zjazdownia.rpg.listener.PlayerInCityListener;
 import eu.zjazdownia.rpg.listener.PlayerJoinQuitListener;
 import eu.zjazdownia.rpg.magicItems.Heartstone;
+import eu.zjazdownia.rpg.party.PartyManager;
 import eu.zjazdownia.rpg.scoreboard.BoardManager;
 import eu.zjazdownia.rpg.util.ConfigUtils;
 import net.kyori.adventure.text.Component;
@@ -43,6 +44,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
     private ClassGUI classGUI;
     private LevelManager levelManager;
     private Heartstone  heartstone;
+    private PartyManager partyManager;
 
     CityComands cityCommands = new CityComands(this);
 
@@ -61,6 +63,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         this.accountGUI = new AccountGUI(this);
         this.classGUI = new ClassGUI(this);
         this.heartstone = new Heartstone(this, cityCommands);
+        partyManager  = new PartyManager(this);
 
 // inicjalizuj levelManager przed rejestracją listenerów, żeby inne klasy mogły z niego korzystać
         this.levelManager = new LevelManager(this);
@@ -83,16 +86,17 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(new NLoginListener(this, this.accountGUI),  this);
         Bukkit.getPluginManager().registerEvents(this.heartstone, this);
 
+
 // komendy
         getCommand("konto").setExecutor(new KontoCommand(accountGUI));
         getCommand("klasa").setExecutor(new KlasaCommand(classGUI, accountManager));
         getCommand("resetkonto").setExecutor(new ResetKontoCommand(accountManager));
         getCommand("zradmin").setExecutor(new ZRAdminCommand(this));
         getCommand("city").setExecutor(cityCommands);
+        getCommand("party").setExecutor(new PartyCommands(this, partyManager));
 
         getLogger().info("ZjazdowniaRPG wlaczone.");
     }
-
     @Override
     public void onDisable() {
 // zapisz pozycje wszystkich online
