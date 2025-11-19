@@ -44,7 +44,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
     private ClassGUI classGUI;
     private LevelManager levelManager;
     private Heartstone  heartstone;
-    private PartyManager partyManager;
+    public PartyManager partyManager;
 
     CityComands cityCommands = new CityComands(this);
 

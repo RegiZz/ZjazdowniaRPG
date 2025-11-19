@@ -2,6 +2,7 @@ package eu.zjazdownia.rpg.gui;
 
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.account.AccountManager;
+import eu.zjazdownia.rpg.party.PartyManager;
 import eu.zjazdownia.rpg.util.LocUtil;
 import org.bukkit.*;
 import org.bukkit.configuration.ConfigurationSection;
@@ -102,8 +103,10 @@ public class ClassGUI implements Listener {
 // daj podstawowe przedmioty w zależności od klasy
         giveStarterKit(p, key);
 
+        PartyManager pm = plugin.partyManager;
+
 // pokaż stały scoreboard
-        plugin.board().show(p, am);
+        plugin.board().show(p, am, pm);
     }
 
     private void giveStarterKit(Player p, String classKey) {
