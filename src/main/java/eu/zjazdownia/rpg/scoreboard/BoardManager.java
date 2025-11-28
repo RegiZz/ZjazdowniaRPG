@@ -37,7 +37,7 @@ public class BoardManager {
         BukkitTask rotationTask;
     }
 
-    // Pokazuje scoreboard gracza i uruchamia taski
+    // Pokazuje scoreboard gracza
     public void show(Player p, AccountManager am, PartyManager pm) {
         hide(p);
 
@@ -59,7 +59,6 @@ public class BoardManager {
         BukkitTask rotationTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             Party party = pm.getParty(uuid);
 
-            // jeśli brak party → zawsze zwykły scoreboard
             if (party == null) {
                 showingParty.put(uuid, false);
                 return;
@@ -82,7 +81,6 @@ public class BoardManager {
         bt.rotationTask = rotationTask;
         tasks.put(uuid, bt);
 
-        // Pokaż od razu scoreboard gracza
         showPlayerBoard(p, am);
     }
 
@@ -91,7 +89,7 @@ public class BoardManager {
         UUID uuid = p.getUniqueId();
         Scoreboard sb = p.getScoreboard();
 
-        Objective old = sb.getObjective("zjazd");
+        Objective old = sb.getObjective(DisplaySlot.SIDEBAR);
         if (old != null) old.unregister();
 
         Objective obj = sb.registerNewObjective("zjazd", "dummy",
@@ -116,7 +114,9 @@ public class BoardManager {
 
     // Pokazuje scoreboard party
     public void showPartyBoard(Player p, Party party) {
-        Scoreboard sb = Bukkit.getScoreboardManager().getNewScoreboard();
+        Scoreboard sb = p.getScoreboard();
+        Objective old = sb.getObjective(DisplaySlot.SIDEBAR);
+        if (old != null) old.unregister();
         Objective obj = sb.registerNewObjective("zjazd_party", "dummy",
                 ChatColor.LIGHT_PURPLE + "❤ Twoje Party ❤");
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
@@ -135,8 +135,6 @@ public class BoardManager {
             obj.getScore(ChatColor.AQUA + "- " + (mem != null ? mem.getName() : "Offline"))
                     .setScore(score--);
         }
-
-        p.setScoreboard(sb);
     }
 
     // Zatrzymuje wszystkie taski gracza

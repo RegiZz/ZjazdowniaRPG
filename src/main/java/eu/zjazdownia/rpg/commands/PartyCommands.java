@@ -146,6 +146,11 @@ public class PartyCommands implements CommandExecutor {
                 p.sendMessage(ChatColor.AQUA + "Członkowie party:");
                 for (UUID m : party.getMembers()) {
                     Player pl = Bukkit.getPlayer(m);
+                    assert pl != null;
+                    if(pl.getUniqueId() == party.getLeader()){
+                        p.sendMessage(ChatColor.GRAY + "- " + (pl != null ? pl.getName() : "Offline") + ChatColor.GOLD + " 👑");
+                        continue;
+                    }
                     p.sendMessage(ChatColor.GRAY + "- " + (pl != null ? pl.getName() : "Offline"));
                 }
                 return true;

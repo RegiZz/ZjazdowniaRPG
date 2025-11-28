@@ -153,13 +153,10 @@ public class Heartstone implements Listener {
             }
 
             private void cleanup() {
-                // anuluj siebie (runnable) i posprzątaj mapy
                 BukkitTask bt = teleportTasks.remove(uuid);
                 if (bt != null) bt.cancel();
                 teleporting.remove(uuid);
-                // ensure actionbar cleared soon
                 Bukkit.getScheduler().runTaskLater(plugin, () -> player.sendActionBar(Component.empty()), 2L);
-                // i anuluj tę runnable (jeśli nadal aktywna)
                 this.cancel();
             }
         };
@@ -175,7 +172,7 @@ public class Heartstone implements Listener {
         double dx = from.getX() - to.getX();
         double dy = from.getY() - to.getY();
         double dz = from.getZ() - to.getZ();
-        return (dx * dx + dy * dy + dz * dz) > 0.01; // ~10 cm tolerancji
+        return (dx * dx + dy * dy + dz * dz) > 0.01;
     }
 
     // Jeśli gracz się ruszy — przerwij teleport (zadziała szybko)
