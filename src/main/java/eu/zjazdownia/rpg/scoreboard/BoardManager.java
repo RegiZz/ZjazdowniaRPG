@@ -44,27 +44,26 @@ public class BoardManager {
         UUID uuid = p.getUniqueId();
         showingParty.put(uuid, false);
 
-        // Stwórz nowy scoreboard
         Scoreboard sb = Bukkit.getScoreboardManager().getNewScoreboard();
         p.setScoreboard(sb);
 
-        // Task aktualizacji statystyk co 2 sekundy
+        // Task aktualizacji co 2 sekundy
         BukkitTask updateTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            if (showingParty.get(uuid)) return; // jeśli party scoreboard, nie aktualizuj
+            if (showingParty.getOrDefault(uuid, false)) return;
+            showPlayerBoard(p, am);
+        }, 0L, 40L); // Zmień na 0L, żeby od razu pokazać
 
-            showPlayerBoard(p, am); // aktualizacja zwykłego scoreboardu
-        }, 20L, 40L);
-
-        // Task rotacji między scoreboardem gracza a party co 15 sekund
+        // Task rotacji - DELAY 300L (15 sekund), potem co 300L
         BukkitTask rotationTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             Party party = pm.getParty(uuid);
 
             if (party == null) {
                 showingParty.put(uuid, false);
+                showPlayerBoard(p, am); // Pokaż zwykły board
                 return;
             }
 
-            boolean showPartyNow = !showingParty.get(uuid);
+            boolean showPartyNow = !showingParty.getOrDefault(uuid, false);
             showingParty.put(uuid, showPartyNow);
 
             if (showPartyNow) {
@@ -73,15 +72,12 @@ public class BoardManager {
                 showPlayerBoard(p, am);
             }
 
-        }, 0L, 300L); // co 15 sekund
+        }, 300L, 300L); // ZMIEŃ: delay 300L zamiast 0L
 
-        // Zapisz taski w mapie
         BoardTasks bt = new BoardTasks();
         bt.updateTask = updateTask;
         bt.rotationTask = rotationTask;
         tasks.put(uuid, bt);
-
-        showPlayerBoard(p, am);
     }
 
     // Pokazuje zwykły scoreboard gracza

@@ -1,6 +1,8 @@
 package eu.zjazdownia.rpg.level;
 
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
+import eu.zjazdownia.rpg.party.Party;
+import eu.zjazdownia.rpg.party.PartyManager;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -21,15 +23,17 @@ import java.util.concurrent.ConcurrentHashMap;
 public class LevelingListener implements Listener {
     private final ZjazdowniaRPG plugin;
     private final LevelManager levels;
+    private final PartyManager parties;
 
     // map: target entity UUID -> last damager player UUID + time
     private final Map<UUID, UUID> lastDamagerPlayer = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastDamagerTime = new ConcurrentHashMap<>();
     private final long DAMAGE_TIMEOUT_MS = 8_000L; // 8s okno
 
-    public LevelingListener(ZjazdowniaRPG plugin, LevelManager levels) {
+    public LevelingListener(ZjazdowniaRPG plugin, LevelManager levels, PartyManager parties) {
         this.plugin = plugin;
         this.levels = levels;
+        this.parties = parties;
         plugin.getLogger().info("LevelingListener created");
     }
 
@@ -66,11 +70,9 @@ public class LevelingListener implements Listener {
             if (time != null && pu != null && (System.currentTimeMillis() - time) <= DAMAGE_TIMEOUT_MS) {
                 killer = plugin.getServer().getPlayer(pu);
             }
-        } else {
-            plugin.getLogger().info("getKiller() -> " + killer.getName());
         }
 
-// cleanup
+        // cleanup
         lastDamagerPlayer.remove(e.getEntity().getUniqueId());
         lastDamagerTime.remove(e.getEntity().getUniqueId());
 
@@ -84,11 +86,42 @@ public class LevelingListener implements Listener {
         PersistentDataContainer data = mob.getPersistentDataContainer();
 
         int mobLevel = data.getOrDefault(key, PersistentDataType.INTEGER, 1);
-
-        // Skalowanie expa zależne od levelu moba
         int finalXp = (int) Math.round(basexp * (1.0 + (mobLevel - 1) * 0.25));
 
-        levels.addExp(killer, finalXp);
-        plugin.getLogger().info("Added " + finalXp + " xp to " + killer.getName());
+        // Sprawdź czy jest w party
+        Party party = parties.getParty(killer.getUniqueId());
+
+        if (party != null) {
+            // Rozdaj XP wszystkim w party (w zasięgu?)
+            int membersOnline = 0;
+            for (UUID memberId : party.getMembers()) {
+                Player member = plugin.getServer().getPlayer(memberId);
+                if (member != null && member.isOnline()) {
+                    membersOnline++;
+                }
+            }
+
+            // XP per member (możesz dodać bonus za party)
+            int xpPerMember = finalXp / Math.max(1, membersOnline);
+
+            for (UUID memberId : party.getMembers()) {
+                Player member = plugin.getServer().getPlayer(memberId);
+                if (member != null && member.isOnline()
+                        && member.getWorld().equals(killer.getWorld())
+                        && member.getLocation().distance(killer.getLocation()) <= 70) {
+                    levels.addExp(member, xpPerMember);
+                }
+            }
+
+            plugin.getLogger().info("Distributed " + xpPerMember + " xp to " + membersOnline + " party members");
+        } else {
+            // Solo kill
+            levels.addExp(killer, finalXp);
+            plugin.getLogger().info("Added " + finalXp + " xp to " + killer.getName());
+        }
+    }
+
+    public boolean isKillerInParty(Player killer) {
+        return parties.getParty(killer.getUniqueId()) != null;
     }
 }

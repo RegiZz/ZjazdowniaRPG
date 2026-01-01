@@ -79,7 +79,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(accountGUI, this);
         getServer().getPluginManager().registerEvents(classGUI, this);
 // rejestruj LevelingListener z instancją levelManager
-        getServer().getPluginManager().registerEvents(new LevelingListener(this, this.levelManager), this);
+        getServer().getPluginManager().registerEvents(new LevelingListener(this, this.levelManager, partyManager), this);
         Bukkit.getPluginManager().registerEvents(new PlayerInCityListener(cityCommands), this);
         Bukkit.getPluginManager().registerEvents(cityCommands, this);
         Bukkit.getPluginManager().registerEvents(new MobSpawnListener(cityCommands, this), this);
