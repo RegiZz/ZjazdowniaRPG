@@ -13,6 +13,8 @@ import eu.zjazdownia.rpg.listener.NLoginListener;
 import eu.zjazdownia.rpg.listener.PlayerInCityListener;
 import eu.zjazdownia.rpg.listener.PlayerJoinQuitListener;
 import eu.zjazdownia.rpg.magicItems.Heartstone;
+import eu.zjazdownia.rpg.magicItems.LightningWand;
+import eu.zjazdownia.rpg.magicItems.RicochetBow;
 import eu.zjazdownia.rpg.party.PartyManager;
 import eu.zjazdownia.rpg.scoreboard.BoardManager;
 import eu.zjazdownia.rpg.util.ConfigUtils;
@@ -45,6 +47,8 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
     private LevelManager levelManager;
     private Heartstone  heartstone;
     public PartyManager partyManager;
+    public LightningWand lightningWand;
+    public RicochetBow ricochetBow;
 
     CityComands cityCommands = new CityComands(this);
 
@@ -64,6 +68,8 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         this.classGUI = new ClassGUI(this);
         this.heartstone = new Heartstone(this, cityCommands);
         partyManager  = new PartyManager(this);
+        this.lightningWand = new LightningWand(this);
+        this.ricochetBow = new  RicochetBow(this);
 
 // inicjalizuj levelManager przed rejestracją listenerów, żeby inne klasy mogły z niego korzystać
         this.levelManager = new LevelManager(this);
@@ -85,13 +91,15 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(new MobSpawnListener(cityCommands, this), this);
         Bukkit.getPluginManager().registerEvents(new NLoginListener(this, this.accountGUI),  this);
         Bukkit.getPluginManager().registerEvents(this.heartstone, this);
+        Bukkit.getPluginManager().registerEvents(this.lightningWand, this);
+        Bukkit.getPluginManager().registerEvents(this.ricochetBow, this);
 
 
 // komendy
         getCommand("konto").setExecutor(new KontoCommand(accountGUI));
         getCommand("klasa").setExecutor(new KlasaCommand(classGUI, accountManager));
         getCommand("resetkonto").setExecutor(new ResetKontoCommand(accountManager));
-        getCommand("zradmin").setExecutor(new ZRAdminCommand(this));
+        getCommand("zradmin").setExecutor(new ZRAdminCommand(this, this.lightningWand));
         getCommand("city").setExecutor(cityCommands);
         getCommand("party").setExecutor(new PartyCommands(this, partyManager));
 
@@ -158,7 +166,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         Player p = e.getPlayer();
         accountManager.saveLastLocation(p.getUniqueId(), p.getLocation());
         boardManager.hide(p);
-        accountManager.saveInventory(p.getUniqueId(), accountManager.getCurrentAccount(p.getUniqueId()), p.getInventory().getContents());
+        accountManager.saveInventory(p.getUniqueId(), accountManager.getCurrentAccount(p.getUniqueId()), p.getInventory().getContents(), p.getInventory().getArmorContents());
         accountManager.flush(p.getUniqueId());
     }
 

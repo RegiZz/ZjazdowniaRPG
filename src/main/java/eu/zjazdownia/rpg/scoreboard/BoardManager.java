@@ -72,7 +72,7 @@ public class BoardManager {
                 showPlayerBoard(p, am);
             }
 
-        }, 300L, 300L); // ZMIEŃ: delay 300L zamiast 0L
+        }, 20L, 300L); // ZMIEŃ: delay 300L zamiast 0L
 
         BoardTasks bt = new BoardTasks();
         bt.updateTask = updateTask;

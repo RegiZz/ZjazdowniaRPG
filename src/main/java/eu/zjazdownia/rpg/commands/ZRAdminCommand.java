@@ -3,6 +3,8 @@ package eu.zjazdownia.rpg.commands;
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.account.AccountManager;
 import eu.zjazdownia.rpg.level.LevelManager;
+import eu.zjazdownia.rpg.magicItems.LightningWand;
+import eu.zjazdownia.rpg.magicItems.RicochetBow;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -14,6 +16,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public class ZRAdminCommand implements CommandExecutor {
@@ -22,12 +25,14 @@ public class ZRAdminCommand implements CommandExecutor {
     private final AccountManager am;
     private final LevelManager lm;
     private final NamespacedKey wandKey;
+    private final LightningWand lightningWand;
 
-    public ZRAdminCommand(ZjazdowniaRPG plugin) {
+    public ZRAdminCommand(ZjazdowniaRPG plugin, LightningWand lightningWand) {
         this.plugin = plugin;
         this.am = plugin.accounts();
         this.lm = plugin.levels();
         this.wandKey = new NamespacedKey(plugin, "mage_wand");
+        this.lightningWand = lightningWand;
     }
 
     @Override
@@ -48,6 +53,7 @@ public class ZRAdminCommand implements CommandExecutor {
                 case "addxp" -> cmdAddXp(sender, args);
                 case "setclass" -> cmdSetClass(sender, args);
                 case "givewand" -> cmdGiveWand(sender, args);
+                case "givebow" -> cmdBow(sender, args);
                 case "info" -> cmdInfo(sender, args);
                 case "setfirstspawn" -> cmdSetFirstSpawn(sender);
                 default -> sendHelp(sender);
@@ -64,7 +70,8 @@ public class ZRAdminCommand implements CommandExecutor {
         s.sendMessage(ChatColor.YELLOW + "/zradmin setlevel <nick> <level>");
         s.sendMessage(ChatColor.YELLOW + "/zradmin addxp <nick> <amount>");
         s.sendMessage(ChatColor.YELLOW + "/zradmin setclass <nick> <classKey>");
-        s.sendMessage(ChatColor.YELLOW + "/zradmin givewand <nick>");
+        s.sendMessage(ChatColor.YELLOW + "/zradmin givewand <nick> <wandName>");
+        s.sendMessage(ChatColor.YELLOW + "/zradmin givebow <nick> <bowName>");
         s.sendMessage(ChatColor.YELLOW + "/zradmin info <nick>");
         s.sendMessage(ChatColor.YELLOW + "/zradmin setfirstspawn");
     }
@@ -154,21 +161,51 @@ public class ZRAdminCommand implements CommandExecutor {
     }
 
     private void cmdGiveWand(CommandSender s, String[] args) {
-        if (args.length < 2) { s.sendMessage(ChatColor.RED + "Użycie: /zradmin givewand <nick>"); return; }
+        if (args.length < 3) { s.sendMessage(ChatColor.RED + "Użycie: /zradmin givewand <nick> <mage/lightning>"); return; }
         String name = args[1];
+        String key = args[2];
         Player p = Bukkit.getPlayerExact(name);
         if (p == null) { s.sendMessage(ChatColor.RED + "Gracz offline: " + name); return; }
-        ItemStack wand = new ItemStack(org.bukkit.Material.BLAZE_ROD);
-        ItemMeta m = wand.getItemMeta();
-        if (m != null) {
-            m.setDisplayName(ChatColor.LIGHT_PURPLE + "Różdżka");
-            m.getPersistentDataContainer().set(wandKey, PersistentDataType.BYTE, (byte) 1);
-            wand.setItemMeta(m);
+
+        switch(key){
+            case "mage":{
+                ItemStack wand = new ItemStack(org.bukkit.Material.BLAZE_ROD);
+                ItemMeta m = wand.getItemMeta();
+                if (m != null) {
+                    m.setDisplayName(ChatColor.LIGHT_PURPLE + "Różdżka");
+                    m.getPersistentDataContainer().set(wandKey, PersistentDataType.BYTE, (byte) 1);
+                    wand.setItemMeta(m);
+                }
+                Map<Integer, ItemStack> leftover = p.getInventory().addItem(wand);
+                if (!leftover.isEmpty()) leftover.values().forEach(it -> p.getWorld().dropItemNaturally(p.getLocation(), it));
+                s.sendMessage(ChatColor.GREEN + "Dano różdżkę graczowi " + name);
+                p.sendMessage(ChatColor.YELLOW + "Otrzymałeś różdżkę (admin).");
+                break;
+            }
+            case "lightning":{
+                p.getInventory().addItem(LightningWand.createWand());
+                break;
+            }
+
+            default:{p.sendMessage(ChatColor.RED + "Nie znaleziono różdżki");}
+
         }
-        Map<Integer, ItemStack> leftover = p.getInventory().addItem(wand);
-        if (!leftover.isEmpty()) leftover.values().forEach(it -> p.getWorld().dropItemNaturally(p.getLocation(), it));
-        s.sendMessage(ChatColor.GREEN + "Dano różdżkę graczowi " + name);
-        p.sendMessage(ChatColor.YELLOW + "Otrzymałeś różdżkę (admin).");
+
+
+    }
+
+    private void cmdBow(CommandSender s, String[] args) {
+        if (args.length < 3) { s.sendMessage(ChatColor.RED + "Użycie: /zradmin givebow <nick> <ricochet>"); return; }
+        String name = args[1];
+        String key = args[2];
+        Player p = Bukkit.getPlayerExact(name);
+        if (p == null) { s.sendMessage(ChatColor.RED + "Gracz offline: " + name); return; }
+        switch(key){
+            case "ricochet":{
+                p.getInventory().addItem(RicochetBow.getItem());
+            }
+        }
+
     }
 
     private void cmdInfo(CommandSender s, String[] args) {

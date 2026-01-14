@@ -138,7 +138,7 @@ public class ClassAbilities implements Listener {
         return key != null ? key : raw.toLowerCase(Locale.ROOT);
     }
 
-    private boolean isClass(Player p, String canonical) {
+    public boolean isClass(Player p, String canonical) {
         String c = canonicalClass(clsOf(p));
         return canonical.equals(c);
     }

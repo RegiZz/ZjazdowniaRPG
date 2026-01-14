@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import static org.apache.commons.lang3.SerializationUtils.serialize;
+
 public class AccountManager {
     private final ZjazdowniaRPG plugin;
     private final Map<UUID, YamlConfiguration> cache = new HashMap<>();
@@ -113,7 +115,7 @@ public class AccountManager {
         cache.get(id).set(path(id, "exp"), 0); // reset exp
     }
 
-    public void saveInventory(UUID id, int accountIdx, ItemStack[] contents) {
+    public void saveInventory(UUID id, int accountIdx, ItemStack[] contents, ItemStack[] armor) {
         ensureLoaded(id);
         List<Map<String, Object>> serialized = new ArrayList<>();
         for (ItemStack item : contents) {
@@ -124,6 +126,10 @@ public class AccountManager {
             }
         }
         cache.get(id).set("accounts." + accountIdx + ".inventory", serialized);
+        cache.get(id).set(
+                "accounts." + accountIdx + ".armor",
+                serialize(armor)
+        );
     }
 
 

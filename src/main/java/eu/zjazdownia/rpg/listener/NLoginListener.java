@@ -25,26 +25,26 @@ public class NLoginListener implements Listener {
     public void onLogin(LoginEvent e) {
         Player p = e.getPlayer();
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
             accountGUI.openFor(p);
-        });
+        }, 20L);
     }
 
     @EventHandler
     public void onLogin(PremiumLoginEvent e) {
         Player p = e.getPlayer();
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
             accountGUI.openFor(p);
-        });
+        }, 20L);
     }
 
     @EventHandler
     public void onLogin(SessionLoginEvent e) {
         Player p = e.getPlayer();
 
-        Bukkit.getScheduler().runTask(plugin, () -> {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
             accountGUI.openFor(p);
-        });
+        }, 20L);
     }
 }

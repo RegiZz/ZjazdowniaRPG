@@ -72,7 +72,7 @@ public class Heartstone implements Listener {
 
         UUID uuid = player.getUniqueId();
         long now = System.currentTimeMillis();
-        long end = cooldowns.getOrDefault(uuid, 0L);
+        long end = cooldowns.getOrDefault(uuid, Long.valueOf(0L));
 
         if (now < end) {
             long secondsLeft = (end - now) / 1000;
@@ -140,7 +140,7 @@ public class Heartstone implements Listener {
                     player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
 
                     // ustaw cooldown
-                    cooldowns.put(uuid, System.currentTimeMillis() + COOLDOWN_MS);
+                    cooldowns.put(uuid, Long.valueOf(System.currentTimeMillis() + COOLDOWN_MS));
                     player.sendMessage(ChatColor.GRAY + "(Heartstone dostępny ponownie za 30 sekund)");
                     return;
                 }
