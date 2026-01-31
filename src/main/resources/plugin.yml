@@ -28,6 +28,9 @@ commands:
     description: Zarządzanie mastami
     usage: /city <arg> <arg2> <arg3>
     permission: zjazdownia.admin
+  menu:
+    description: Menu gracza
+    usage: /menu
 
 permissions:
   zjazdownia.account.2:

@@ -4,8 +4,10 @@ import eu.zjazdownia.rpg.account.AccountManager;
 import eu.zjazdownia.rpg.cities.City;
 import eu.zjazdownia.rpg.classes.ClassAbilities;
 import eu.zjazdownia.rpg.commands.*;
+import eu.zjazdownia.rpg.friends.FriendsManager;
 import eu.zjazdownia.rpg.gui.AccountGUI;
 import eu.zjazdownia.rpg.gui.ClassGUI;
+import eu.zjazdownia.rpg.gui.MenuGUI;
 import eu.zjazdownia.rpg.level.LevelManager;
 import eu.zjazdownia.rpg.level.LevelingListener;
 import eu.zjazdownia.rpg.listener.MobSpawnListener;
@@ -33,6 +35,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -49,6 +52,8 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
     public PartyManager partyManager;
     public LightningWand lightningWand;
     public RicochetBow ricochetBow;
+    public FriendsManager friendsManager;
+    public MenuGUI menuGUI;
 
     CityComands cityCommands = new CityComands(this);
 
@@ -64,27 +69,24 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
 // menedżery / moduły
         this.accountManager = new AccountManager(this);
         this.boardManager = new BoardManager(this);
+        this.friendsManager = new FriendsManager();
+        this.menuGUI = new MenuGUI(this,friendsManager);
         this.accountGUI = new AccountGUI(this);
         this.classGUI = new ClassGUI(this);
         this.heartstone = new Heartstone(this, cityCommands);
         partyManager  = new PartyManager(this);
         this.lightningWand = new LightningWand(this);
         this.ricochetBow = new  RicochetBow(this);
-
-// inicjalizuj levelManager przed rejestracją listenerów, żeby inne klasy mogły z niego korzystać
         this.levelManager = new LevelManager(this);
 
         cityCommands.loadCities();
 
 // rejestracja listenerów
         Bukkit.getPluginManager().registerEvents(new PlayerJoinQuitListener(this), this);
-// jeśli chcesz trzymać referencję do ClassAbilities, możesz utworzyć instancję i zarejestrować ją:
         getServer().getPluginManager().registerEvents(new ClassAbilities(this), this);
-
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(accountGUI, this);
         getServer().getPluginManager().registerEvents(classGUI, this);
-// rejestruj LevelingListener z instancją levelManager
         getServer().getPluginManager().registerEvents(new LevelingListener(this, this.levelManager, partyManager), this);
         Bukkit.getPluginManager().registerEvents(new PlayerInCityListener(cityCommands), this);
         Bukkit.getPluginManager().registerEvents(cityCommands, this);
@@ -93,6 +95,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         Bukkit.getPluginManager().registerEvents(this.heartstone, this);
         Bukkit.getPluginManager().registerEvents(this.lightningWand, this);
         Bukkit.getPluginManager().registerEvents(this.ricochetBow, this);
+        Bukkit.getPluginManager().registerEvents(menuGUI, this);
 
 
 // komendy
@@ -102,12 +105,15 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         getCommand("zradmin").setExecutor(new ZRAdminCommand(this, this.lightningWand));
         getCommand("city").setExecutor(cityCommands);
         getCommand("party").setExecutor(new PartyCommands(this, partyManager));
+        getCommand("menu").setExecutor((sender, cmd, label, args)->{
+            if (sender instanceof Player p) menuGUI.openFor(p);
+            return true;
+        });
 
         getLogger().info("ZjazdowniaRPG wlaczone.");
     }
     @Override
     public void onDisable() {
-// zapisz pozycje wszystkich online
         for (Player p : Bukkit.getOnlinePlayers()) {
             accountManager.saveLastLocation(p.getUniqueId(), p.getLocation());
             accountManager.flush(p.getUniqueId());
