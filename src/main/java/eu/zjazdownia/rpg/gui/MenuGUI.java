@@ -82,11 +82,11 @@ public class MenuGUI implements Listener {
     private void openFriends(Player player) {
         Inventory inv = Bukkit.createInventory(null, 54, "§8Znajomi");
 
-        inv.setItem(49, item(Material.PAPER, "§bDodaj znajomego")); // Slot 49 to środek dolnego rzędu
+        inv.setItem(49, item(Material.PAPER, "§bDodaj znajomego"));
 
         int slot = 0;
         for (UUID friendId : friendsManager.getFriends(player.getUniqueId())) {
-            if (slot == 49) slot++; // Pomija slot 49, żeby nie nadpisać przycisku
+            if (slot == 49) slot++;
 
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -120,13 +120,11 @@ public class MenuGUI implements Listener {
 
                     String text = stateSnapshot.getText();
 
-                    // Walidacja pustego tekstu
                     if (text == null || text.isBlank()) {
                         player.sendMessage("§cPodaj nick gracza!");
                         return Arrays.asList(AnvilGUI.ResponseAction.close());
                     }
 
-                    // Sprawdzenie czy gracz istnieje
                     OfflinePlayer target = Bukkit.getOfflinePlayer(text);
 
                     if (!target.hasPlayedBefore() && !target.isOnline()) {
@@ -134,19 +132,16 @@ public class MenuGUI implements Listener {
                         return Arrays.asList(AnvilGUI.ResponseAction.close());
                     }
 
-                    // Sprawdzenie czy to nie jest ten sam gracz
                     if (target.getUniqueId().equals(player.getUniqueId())) {
                         player.sendMessage("§cNie możesz dodać sam siebie!");
                         return Arrays.asList(AnvilGUI.ResponseAction.close());
                     }
 
-                    // Sprawdzenie czy już nie jest znajomym
                     if (friendsManager.isFriend(player.getUniqueId(), target.getUniqueId())) {
                         player.sendMessage("§cGracz §e" + target.getName() + " §cjest już Twoim znajomym!");
                         return Arrays.asList(AnvilGUI.ResponseAction.close());
                     }
 
-                    // Dodanie znajomego
                     friendsManager.addFriend(player.getUniqueId(), target.getUniqueId());
                     player.sendMessage("§aDodano znajomego: §e" + target.getName());
 
