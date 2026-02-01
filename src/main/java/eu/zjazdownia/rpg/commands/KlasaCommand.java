@@ -17,7 +17,6 @@ public class KlasaCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
-        // otwieraj tylko, jeśli konto nie ma klasy
         if (am.getSelectedClass(p.getUniqueId()) == null) {
             gui.openFor(p);
         } else {

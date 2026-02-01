@@ -81,7 +81,6 @@ public class AccountGUI implements Listener {
 
         inv.setItem(5, makeItem(Material.valueOf(icon), name, lore2));
 
-        // Przywróć obecne konto po przygotowaniu GUI
         am.setCurrentAccount(p.getUniqueId(), am.getCurrentAccount(p.getUniqueId()));
 
         p.openInventory(inv);
@@ -118,7 +117,6 @@ public class AccountGUI implements Listener {
         AccountManager am = plugin.accounts();
         am.setCurrentAccount(p.getUniqueId(), idx);
 
-        // Przywróć ekwipunek dla nowego konta
         ItemStack[] inv = am.getInventory(p.getUniqueId(), idx);
         if(inv == null) inv = new ItemStack[36];
         p.getInventory().clear();

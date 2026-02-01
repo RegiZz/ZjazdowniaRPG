@@ -41,7 +41,6 @@ public class MobSpawnListener implements Listener {
 
         int mobLevelValue = city.getMoblvl();
 
-        // utwórz i zastosuj MobLevel
         MobLevel mobLevel = new MobLevel(mob.getType(), mobLevelValue);
         mobLevel.applyTo(mob);
 

@@ -96,9 +96,9 @@ public class LightningWand implements Listener {
         double flat = plugin.levels().getAttackPerLevelMage() * Math.max(0, lvl - 1);
 
         int lightningCount = 4;
-        double damage = 14.0 + flat;          // obrażenia jednego pioruna
-        double radius = 2.5;           // promień obrażeń
-        double spread = 4.5;            // losowe rozrzucenie
+        double damage = 14.0 + flat;
+        double radius = 2.5;
+        double spread = 4.5;
 
 
         Location base = hitBlock.getLocation().add(0.5, 1, 0.5);

@@ -48,13 +48,11 @@ public class LevelManager {
         maxLevel = Math.max(1, cfg.getInt("leveling.max-level", 50));
         healthPerLevel = Math.max(0.0, cfg.getDouble("leveling.health-per-level", 1.0));
 
-// load attack bonuses
         attackPerLevelWarrior = cfg.getDouble("leveling.bonuses.attack-per-level.warrior", 0.5);
         attackPerLevelMage = cfg.getDouble("leveling.bonuses.attack-per-level.mage", 0.2);
         attackPerLevelArcher = cfg.getDouble("leveling.bonuses.attack-per-level.archer", 0.3);
         arrowDamageMultiplierPerLevel = cfg.getDouble("leveling.bonuses.arrow-damage-multiplier-per-level", 0.05);
 
-// mob xp
         mobXp.clear();
         if (cfg.isConfigurationSection("leveling.mob-xp")) {
             Set<String> keys = cfg.getConfigurationSection("leveling.mob-xp").getKeys(false);
@@ -179,14 +177,13 @@ public class LevelManager {
         p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1.1f);
     }
 
-    // odśwież atrybuty (HP + attack bonus)
     public void refreshAttributes(Player p) {
         int lvl = plugin.accounts().getLevel(p.getUniqueId());
         double base = 20.0; // 10 serc
         double bonus = Math.max(0.0, healthPerLevel) * Math.max(0, (lvl - 1));
         double targetHealth = base + bonus;
 
-// HEALTH
+        // HEALTH
         if (p.getAttribute(Attribute.GENERIC_MAX_HEALTH) != null) {
             double prevMax = p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
             double currentHealth = Math.min(p.getHealth(), prevMax);
@@ -195,7 +192,7 @@ public class LevelManager {
             p.setHealth(Math.max(1.0, Math.min(targetHealth, targetHealth * percent)));
         }
 
-// ATTACK DAMAGE - usuń poprzednie modifiery i dodaj nowy zgodny z klasą i poziomem
+        // ATTACK DAMAGE - usuń poprzednie modifiery i dodaj nowy zgodny z klasą i poziomem
         String raw = plugin.accounts().getSelectedClass(p.getUniqueId());
         String canonical = canonicalClass(raw);
         double attackBonus = 0.0;
@@ -218,7 +215,6 @@ public class LevelManager {
 
         if (p.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE) != null) {
             try {
-// usuń poprzedni modifier o danym UUID jeśli istnieje
                 var attr = p.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
                 if (attr.getModifiers() != null) {
                     attr.getModifiers().stream()

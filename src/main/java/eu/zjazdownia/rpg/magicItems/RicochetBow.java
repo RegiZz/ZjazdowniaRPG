@@ -72,7 +72,6 @@ public class RicochetBow implements Listener {
 
         if (jumpsLeft == null) return;
 
-        // ZADAJ DAMAGE RĘCZNIE ZAWSZE
         hit.damage(arrow.getDamage(), player);
 
         if (jumpsLeft <= 0) {

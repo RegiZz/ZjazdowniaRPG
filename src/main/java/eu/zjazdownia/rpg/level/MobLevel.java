@@ -16,11 +16,10 @@ public class MobLevel {
     private final EntityType type;
     private int level;
 
-    // proste parametry skali
-    private double baseHealth;          // bazowe HP
-    private double healthPerLevel = 0.2;       // +HP na poziom
-    private double baseAttack;           // bazowy atak (2 dmg to 1 serce)
-    private double attackPerLevel = 0.15;       // +atak na poziom
+    private double baseHealth;
+    private double healthPerLevel = 0.2;
+    private double baseAttack;
+    private double attackPerLevel = 0.15;
 
     public MobLevel(EntityType type, int level) {
         this.type = Objects.requireNonNull(type, "type");
@@ -44,7 +43,6 @@ public class MobLevel {
     public void applyTo(LivingEntity mob) {
         if (mob == null) return;
 
-        // Zainicjuj bazowe statystyki z oryginalnego moba
         initBaseStats(mob);
 
         // HEALTH

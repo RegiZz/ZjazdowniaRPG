@@ -24,8 +24,6 @@ public class LevelingListener implements Listener {
     private final ZjazdowniaRPG plugin;
     private final LevelManager levels;
     private final PartyManager parties;
-
-    // map: target entity UUID -> last damager player UUID + time
     private final Map<UUID, UUID> lastDamagerPlayer = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastDamagerTime = new ConcurrentHashMap<>();
     private final long DAMAGE_TIMEOUT_MS = 8_000L; // 8s okno
@@ -88,11 +86,10 @@ public class LevelingListener implements Listener {
         int mobLevel = data.getOrDefault(key, PersistentDataType.INTEGER, 1);
         int finalXp = (int) Math.round(basexp * (1.0 + (mobLevel - 1) * 0.25));
 
-        // Sprawdź czy jest w party
         Party party = parties.getParty(killer.getUniqueId());
 
         if (party != null) {
-            // Rozdaj XP wszystkim w party (w zasięgu?)
+            // Rozdaj XP wszystkim w party
             int membersOnline = 0;
             for (UUID memberId : party.getMembers()) {
                 Player member = plugin.getServer().getPlayer(memberId);
@@ -101,8 +98,7 @@ public class LevelingListener implements Listener {
                 }
             }
 
-            // XP per member (możesz dodać bonus za party)
-            int xpPerMember = finalXp / Math.max(1, membersOnline);
+            int xpPerMember = (finalXp / Math.max(1, membersOnline)) + 5;
 
             for (UUID memberId : party.getMembers()) {
                 Player member = plugin.getServer().getPlayer(memberId);

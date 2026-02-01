@@ -55,14 +55,12 @@ public class ClassGUI implements Listener {
 
     @EventHandler
     public void onClick(InventoryClickEvent e) {
-// Sprawdź tytuł GUI (po stripColor)
         String cfgTitleRaw = plugin.getConfig().getString("gui.class.title");
         if (cfgTitleRaw == null) return;
         String guiTitle = ChatColor.translateAlternateColorCodes('&', cfgTitleRaw);
         String currentTitle = e.getView().getTitle();
         if (currentTitle == null || !ChatColor.stripColor(currentTitle).equals(ChatColor.stripColor(guiTitle))) return;
 
-// Reaguj tylko, gdy kliknięto w górną część GUI
         if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) return;
         e.setCancelled(true);
 
@@ -77,7 +75,6 @@ public class ClassGUI implements Listener {
 
         String chosen = ChatColor.stripColor(meta.getDisplayName());
 
-// znajdź klucz klasy po display
         ConfigurationSection classesSec = plugin.getConfig().getConfigurationSection("classes");
         if (classesSec == null) return;
 
@@ -100,41 +97,36 @@ public class ClassGUI implements Listener {
                 plugin.getConfig().getString("classes." + key.toLowerCase(Locale.ROOT) + ".display")));
 
 
-// daj podstawowe przedmioty w zależności od klasy
         giveStarterKit(p, key);
 
         PartyManager pm = plugin.partyManager;
 
-// pokaż stały scoreboard
         plugin.board().show(p, am, pm);
     }
 
     private void giveStarterKit(Player p, String classKey) {
         String k = classKey == null ? "" : classKey.toLowerCase(Locale.ROOT);
 
-// Wojownik / Warrior
+        // Wojownik / Warrior
         if (k.equals("wojownik") || k.equals("warrior")) {
             giveIfMissing(p, new ItemStack(Material.STONE_SWORD), 1);
             giveIfMissing(p, new ItemStack(Material.STONE_AXE), 1);
             p.sendMessage(ChatColor.YELLOW + "Otrzymałeś podstawowy ekwipunek Wojownika.");
             return;
         }
-
+        // Mag / Mage
         if (k.equals("mag") || k.equals("mage")) {
             NamespacedKey wandKey = new NamespacedKey(plugin, "mage_wand");
 
-// przygotuj różdżkę z tagiem
             ItemStack wand = new ItemStack(Material.BLAZE_ROD);
             ItemMeta m = wand.getItemMeta();
             if (m != null) {
                 m.setDisplayName(ChatColor.LIGHT_PURPLE + "Różdżka");
-// dodaj tag PDC, tylko przedmiot z tym tagiem będzie działać jako różdżka
                 m.getPersistentDataContainer().set(wandKey, PersistentDataType.BYTE, (byte) 1);
                 m.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
                 wand.setItemMeta(m);
             }
 
-// sprawdź, czy gracz już posiada oznaczoną różdżkę (szukamy tagu)
             boolean hasWand = false;
             for (ItemStack it : p.getInventory().getContents()) {
                 if (it == null) continue;
@@ -153,10 +145,9 @@ public class ClassGUI implements Listener {
             return;
         }
 
-// Łucznik / Archer
+        // Łucznik / Archer
         if (k.equals("łucznik") || k.equals("lucznik") || k.equals("archer")) {
             giveIfMissing(p, new ItemStack(Material.BOW), 1);
-// zapewnij co najmniej 32 strzały
             int arrows = countInInventory(p, Material.ARROW);
             if (arrows < 32) {
                 giveOrDrop(p, new ItemStack(Material.ARROW, 32 - arrows));

@@ -87,14 +87,12 @@ public class Heartstone implements Listener {
             return;
         }
 
-        // Rozpocznij odliczanie
         startTeleportCountdown(player, nearest);
     }
 
     private void startTeleportCountdown(Player player, City city) {
         UUID uuid = player.getUniqueId();
 
-        // jeśli już istnieje aktywny task dla tego gracza, anuluj go (zapobiega nakładaniu)
         if (teleportTasks.containsKey(uuid)) {
             teleportTasks.get(uuid).cancel();
             teleportTasks.remove(uuid);
@@ -107,7 +105,6 @@ public class Heartstone implements Listener {
 
         Location startLoc = player.getLocation().clone();
 
-        // Tworzymy BukkitRunnable, żeby móc bezpiecznie anulować z zewnątrz
         BukkitRunnable runnable = new BukkitRunnable() {
             int secondsLeft = TELEPORT_DELAY;
 
@@ -121,7 +118,6 @@ public class Heartstone implements Listener {
 
                 // Sprawdzenie ruchu - tylko znaczący ruch (ignorujemy obrót głowy)
                 if (hasMovedSignificantly(startLoc, player.getLocation())) {
-                    // przerwij teleportację
                     player.sendMessage(ChatColor.RED + "❌ Teleportacja przerwana – poruszyłeś się!");
                     player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                     cleanup();
@@ -129,7 +125,6 @@ public class Heartstone implements Listener {
                 }
 
                 if (secondsLeft <= 0) {
-                    // zakończ odliczanie i teleportuj
                     cleanup();
 
                     Location dest = city.getLocation();
@@ -139,13 +134,11 @@ public class Heartstone implements Listener {
                     player.sendMessage(teleport);
                     player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
 
-                    // ustaw cooldown
                     cooldowns.put(uuid, Long.valueOf(System.currentTimeMillis() + COOLDOWN_MS));
                     player.sendMessage(ChatColor.GRAY + "(Heartstone dostępny ponownie za 30 sekund)");
                     return;
                 }
 
-                // ActionBar z odliczaniem
                 String legacy = "§eTeleportacja za §6" + secondsLeft + "s §7- §oNie ruszaj się!";
                 player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(legacy));
 
@@ -161,7 +154,6 @@ public class Heartstone implements Listener {
             }
         };
 
-        // uruchom task i zapisz go w mapie
         BukkitTask bt = runnable.runTaskTimer(plugin, 0L, 20L);
         teleportTasks.put(uuid, bt);
     }
@@ -175,7 +167,7 @@ public class Heartstone implements Listener {
         return (dx * dx + dy * dy + dz * dz) > 0.01;
     }
 
-    // Jeśli gracz się ruszy — przerwij teleport (zadziała szybko)
+    // Jeśli gracz się ruszy — przerwij teleport
     @EventHandler
     public void onMove(PlayerMoveEvent e) {
         Player p = e.getPlayer();
@@ -183,11 +175,9 @@ public class Heartstone implements Listener {
         if (!teleporting.contains(uuid)) return;
 
         if (hasMovedSignificantly(e.getFrom(), e.getTo())) {
-            // anuluj task i posprzątaj
             BukkitTask bt = teleportTasks.remove(uuid);
             if (bt != null) bt.cancel();
             teleporting.remove(uuid);
-            // czyść actionbar
             p.sendActionBar(Component.empty());
             p.sendMessage(ChatColor.RED + "❌ Teleportacja przerwana – poruszyłeś się!");
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);

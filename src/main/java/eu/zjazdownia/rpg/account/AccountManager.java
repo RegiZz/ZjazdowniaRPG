@@ -31,7 +31,6 @@ public class AccountManager {
         cache.computeIfAbsent(id, k -> {
             File f = file(k);
             YamlConfiguration yml = YamlConfiguration.loadConfiguration(f);
-// domyślne: currentAccount = 1, level = 1, exp = 0
             if (!yml.contains("currentAccount")) yml.set("currentAccount", 1);
             if (!yml.contains("accounts.1.level")) yml.set("accounts.1.level", 1);
             if (!yml.contains("accounts.1.exp")) yml.set("accounts.1.exp", 0);
@@ -87,7 +86,6 @@ public class AccountManager {
         cache.get(id).set(path(id, "level"), Math.max(1, lvl));
     }
 
-    // NOWE: EXP
     public int getExp(UUID id) {
         ensureLoaded(id);
         return cache.get(id).getInt(path(id, "exp"), 0);
@@ -133,7 +131,6 @@ public class AccountManager {
     }
 
 
-    @SuppressWarnings("unchecked")
     public ItemStack[] getInventory(UUID id, int accountIdx) {
         ensureLoaded(id);
         List<?> list = cache.get(id).getList("accounts." + accountIdx + ".inventory");

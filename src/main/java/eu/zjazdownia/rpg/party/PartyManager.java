@@ -38,7 +38,6 @@ public class PartyManager {
         party.removeMember(player.getUniqueId());
         partyByMember.remove(player.getUniqueId());
 
-        // jeśli lider wyszedł → zakończ party
         if (party.getLeader().equals(player.getUniqueId())) {
             disband(party);
         }

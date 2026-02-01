@@ -41,7 +41,6 @@ public class MenuGUI implements Listener {
 
         Material icon = Material.ENDER_EYE;
 
-
         ItemStack it = new ItemStack(icon);
         ItemMeta meta = it.getItemMeta();
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);

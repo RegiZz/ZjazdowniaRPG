@@ -24,7 +24,6 @@ public class ResetKontoCommand implements CommandExecutor {
             return true;
         }
 
-        // Brak argumentów -> reset dla siebie (musi być graczem)
         if (args.length == 0) {
             if (!(sender instanceof Player p)) {
                 sender.sendMessage("§eUżycie: /" + label + " <nick>");
@@ -35,7 +34,6 @@ public class ResetKontoCommand implements CommandExecutor {
             return true;
         }
 
-        // Z argumentem -> reset wskazanemu graczowi (online/offline)
         String name = args[0];
         Player online = Bukkit.getPlayerExact(name);
         UUID uuid;

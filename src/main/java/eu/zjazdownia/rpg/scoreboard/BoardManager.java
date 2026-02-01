@@ -21,10 +21,8 @@ public class BoardManager {
 
     private final ZjazdowniaRPG plugin;
 
-    // Mapa, czy pokazujemy party scoreboard
     private final Map<UUID, Boolean> showingParty = new HashMap<>();
 
-    // Holder dla tasków gracza
     private final Map<UUID, BoardTasks> tasks = new HashMap<>();
 
     public BoardManager(ZjazdowniaRPG plugin) {
@@ -47,19 +45,17 @@ public class BoardManager {
         Scoreboard sb = Bukkit.getScoreboardManager().getNewScoreboard();
         p.setScoreboard(sb);
 
-        // Task aktualizacji co 2 sekundy
         BukkitTask updateTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (showingParty.getOrDefault(uuid, false)) return;
             showPlayerBoard(p, am);
-        }, 0L, 40L); // Zmień na 0L, żeby od razu pokazać
+        }, 0L, 40L);
 
-        // Task rotacji - DELAY 300L (15 sekund), potem co 300L
         BukkitTask rotationTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             Party party = pm.getParty(uuid);
 
             if (party == null) {
                 showingParty.put(uuid, false);
-                showPlayerBoard(p, am); // Pokaż zwykły board
+                showPlayerBoard(p, am);
                 return;
             }
 
@@ -72,7 +68,7 @@ public class BoardManager {
                 showPlayerBoard(p, am);
             }
 
-        }, 20L, 300L); // ZMIEŃ: delay 300L zamiast 0L
+        }, 20L, 300L);
 
         BoardTasks bt = new BoardTasks();
         bt.updateTask = updateTask;

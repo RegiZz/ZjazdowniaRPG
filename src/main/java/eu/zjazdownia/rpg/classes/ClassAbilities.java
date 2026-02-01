@@ -38,10 +38,8 @@ public class ClassAbilities implements Listener {
     private final NamespacedKey MAGE_BOLT_KEY;
     private final NamespacedKey ARCHER_ARROW_KEY;
 
-    // Mapowanie alias -> nazwa kanoniczna
     private final Map<String, String> aliasToCanonical = new HashMap<>();
 
-    // Konfigurowalne wartości (z domyślnymi)
     private double warriorMeleeDamageMultiplier = 1.20;
     private double warriorDamageTakenMultiplier = 0.90;
 
@@ -66,21 +64,19 @@ public class ClassAbilities implements Listener {
         reloadFromConfig();
     }
 
-    // Wywołaj po plugin.reloadConfig()
     public void reloadFromConfig() {
         FileConfiguration cfg = plugin.getConfig();
 
-// Mapowanie aliasów
         aliasToCanonical.clear();
         loadAliases(cfg, "abilities.mapping.warrior", "warrior", Arrays.asList("wojownik", "warrior"));
         loadAliases(cfg, "abilities.mapping.mage", "mage", Arrays.asList("mag", "mage"));
         loadAliases(cfg, "abilities.mapping.archer", "archer", Arrays.asList("łucznik", "lucznik", "archer"));
 
-// Warrior
+        // Warrior
         warriorMeleeDamageMultiplier = positiveOrDefault(cfg.getDouble("abilities.warrior.melee-damage-multiplier", 1.20), 1.20, "abilities.warrior.melee-damage-multiplier");
         warriorDamageTakenMultiplier = positiveOrDefault(cfg.getDouble("abilities.warrior.damage-taken-multiplier", 0.90), 0.90, "abilities.warrior.damage-taken-multiplier");
 
-// Mage
+        // Mage
         mageBoltDamage = positiveOrDefault(cfg.getDouble("abilities.mage.bolt.damage", 6.0), 6.0, "abilities.mage.bolt.damage");
         double cdSec = cfg.getDouble("abilities.mage.bolt.cooldown-seconds", 5.0);
         if (Double.isNaN(cdSec) || Double.isInfinite(cdSec) || cdSec < 0) {
@@ -92,7 +88,7 @@ public class ClassAbilities implements Listener {
         mageWeaknessSeconds = nonNegativeOrDefault(cfg.getInt("abilities.mage.bolt.weakness-seconds", 4), 4, "abilities.mage.bolt.weakness-seconds");
         mageSlowSeconds = nonNegativeOrDefault(cfg.getInt("abilities.mage.bolt.slow-seconds", 3), 3, "abilities.mage.bolt.slow-seconds");
 
-// Archer
+        // Archer
         archerArrowDamageMultiplier = positiveOrDefault(cfg.getDouble("abilities.archer.arrow-damage-multiplier", 1.25), 1.25, "abilities.archer.arrow-damage-multiplier");
         archerArrowSpeedMultiplier = positiveOrDefault(cfg.getDouble("abilities.archer.arrow-speed-multiplier", 1.05), 1.05, "abilities.archer.arrow-speed-multiplier");
         archerSlowSeconds = nonNegativeOrDefault(cfg.getInt("abilities.archer.slow-seconds", 2), 2, "abilities.archer.slow-seconds");
@@ -143,7 +139,7 @@ public class ClassAbilities implements Listener {
         return canonical.equals(c);
     }
 
-    // WOJOWNIK: bonus do obrażeń wręcz (teraz uwzględnia level)
+    // WOJOWNIK: bonus do obrażeń wręcz
     @EventHandler(ignoreCancelled = true)
     public void onMeleeDamage(EntityDamageByEntityEvent e) {
         if (!(e.getDamager() instanceof Player p)) return;
@@ -154,10 +150,9 @@ public class ClassAbilities implements Listener {
         boolean meleeWeapon = type.name().endsWith("_SWORD") || type.name().endsWith("_AXE");
         if (!meleeWeapon) return;
 
-// podstawowy mnożnik z abilities
         double damage = e.getDamage() * warriorMeleeDamageMultiplier;
 
-// flat bonus z levelu (LevelManager musi expose getter getAttackPerLevelWarrior())
+        // flat bonus z levelu
         int lvl = plugin.accounts().getLevel(p.getUniqueId());
         double flat = plugin.levels().getAttackPerLevelWarrior() * Math.max(0, lvl - 1);
 
@@ -174,13 +169,11 @@ public class ClassAbilities implements Listener {
         if (!(e.getEntity() instanceof Player p)) return;
         if (!isClass(p, "warrior")) return;
 
-// można rozbudować o defensę zależną od levelu (opcjonalnie)
         e.setDamage(e.getDamage() * warriorDamageTakenMultiplier);
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onMageCast(PlayerInteractEvent e) {
-// reagujemy tylko na main hand
         if (e.getHand() != EquipmentSlot.HAND) return;
 
         Action a = e.getAction();
@@ -192,15 +185,12 @@ public class ClassAbilities implements Listener {
         ItemStack handItem = p.getInventory().getItemInMainHand();
         Material t = handItem == null ? Material.AIR : handItem.getType();
 
-// wymóg: tylko blaze_rod/stick lub (lepiej) oznaczona różdżka przez PDC
         boolean isWandType = (t == Material.STICK || t == Material.BLAZE_ROD);
         if (!isWandType) return;
 
-// opcjonalnie: wymagaj konkretnej różdżki oznaczonej PDC (bez tego każdy patyk zadziała)
         NamespacedKey wandKey = new NamespacedKey(plugin, "mage_wand");
         if (handItem == null || handItem.getItemMeta() == null ||
                 !handItem.getItemMeta().getPersistentDataContainer().has(wandKey, PersistentDataType.BYTE)) {
-// jeśli chcesz, by każdy patyk/blaze_rod działał, usuń tę sekcję
             return;
         }
 
@@ -213,12 +203,10 @@ public class ClassAbilities implements Listener {
             return;
         }
 
-// użyj kierunku z oczu — dokładniejsze celowanie
         Vector dir = p.getEyeLocation().getDirection().normalize().multiply(mageBoltSpeed);
         Snowball bolt = p.launchProjectile(Snowball.class);
         bolt.setVelocity(dir);
 
-// oznacz pocisk, aby rozpoznać go później
         bolt.getPersistentDataContainer().set(MAGE_BOLT_KEY, PersistentDataType.BYTE, (byte) 1);
 
         p.getWorld().playSound(p.getLocation(), Sound.ENTITY_ILLUSIONER_CAST_SPELL, 1f, 1.2f);
@@ -273,10 +261,8 @@ public class ClassAbilities implements Listener {
 
         int lvl = plugin.accounts().getLevel(p.getUniqueId());
 
-// mnożnik z abilities oraz mnożnik procentowy z poziomu (LevelManager.arrowDamageMultiplierPerLevel)
         double arrowLevelMult = 1.0 + (plugin.levels().getArrowDamageMultiplierPerLevel() * Math.max(0, lvl - 1));
 
-// dodatkowy flat bonus z poziomu (attackPerLevelArcher)
         double flat = plugin.levels().getAttackPerLevelArcher() * Math.max(0, lvl - 1);
 
         e.setDamage(e.getDamage() * archerArrowDamageMultiplier * arrowLevelMult + flat);

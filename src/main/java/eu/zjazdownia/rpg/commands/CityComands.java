@@ -153,11 +153,9 @@ public class CityComands implements CommandExecutor, Listener {
 
                     // Jeśli już pokazujemy granice — wyłącz i przywróć bloki
                     if (activeBorderTasks.containsKey(uuid)) {
-                        // cancel task
                         activeBorderTasks.get(uuid).cancel();
                         activeBorderTasks.remove(uuid);
 
-                        // przywróć oryginalne bloki
                         List<Location> locs = activeBorderLocations.remove(uuid);
                         List<BlockData> orig = activeBorderOriginalData.remove(uuid);
                         if (locs != null && orig != null) {
@@ -170,7 +168,6 @@ public class CityComands implements CommandExecutor, Listener {
 
                         p.sendMessage(ChatColor.YELLOW + "Wyłączono podgląd granic miasta '" + targetCity.getName() + "'.");
                     } else {
-                        // oblicz punkty granicy i zapamiętaj oryginalne blockdata
                         List<Location> borderLocations = computeBorderLocations(targetCity);
                         List<BlockData> originalData = new ArrayList<>(borderLocations.size());
                         for (Location loc : borderLocations) {
@@ -181,7 +178,6 @@ public class CityComands implements CommandExecutor, Listener {
                         activeBorderLocations.put(uuid, borderLocations);
                         activeBorderOriginalData.put(uuid, originalData);
 
-                        // uruchom task, który co tick rysuje (wysyła) bloki
                         BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
                             showCityBorderBlocks(p, borderLocations);
                         }, 0L, 10L); // co 10 ticków
@@ -222,11 +218,10 @@ public class CityComands implements CommandExecutor, Listener {
         int radius = city.getRadius();
         World world = loc.getWorld();
 
-        // 1 punkt na każdy blok długości obwodu
         int points = (int) Math.ceil(2 * Math.PI * radius);
 
         List<Location> list = new ArrayList<>(points);
-        Set<Block> addedBlocks = new HashSet<>(); // zapobiegnie duplikatom
+        Set<Block> addedBlocks = new HashSet<>();
 
         for (int i = 0; i < points; i++) {
             double angle = i * 2 * Math.PI / points;
@@ -237,7 +232,7 @@ public class CityComands implements CommandExecutor, Listener {
             int bz = (int) Math.round(z);
 
             Block highest = world.getHighestBlockAt(bx, bz);
-            if (addedBlocks.add(highest)) { // jeśli jeszcze nie dodany
+            if (addedBlocks.add(highest)) {
                 list.add(highest.getLocation());
             }
         }

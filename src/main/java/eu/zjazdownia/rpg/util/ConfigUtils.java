@@ -63,7 +63,6 @@ public class ConfigUtils {
         c.addDefault("firstSpawn.yaw", 0);
         c.addDefault("firstSpawn.pitch", 0);
 
-// abilities (jeśli nie masz już w configu)
         c.addDefault("abilities.warrior.melee-damage-multiplier", 1.20);
         c.addDefault("abilities.warrior.damage-taken-multiplier", 0.90);
         c.addDefault("abilities.mage.bolt.damage", 6.0);
@@ -76,27 +75,24 @@ public class ConfigUtils {
         c.addDefault("abilities.archer.slow-seconds", 2);
         c.addDefault("abilities.archer.slow-amplifier", 1);
 
-// NOWE: leveling defaults
         c.addDefault("leveling.base-exp", 100);
         c.addDefault("leveling.step-exp", 50);
         c.addDefault("leveling.max-level", 50);
         c.addDefault("leveling.health-per-level", 1.0);
-// przykładowe xp za moby (klucze muszą odpowiadać EntityType)
         c.addDefault("leveling.mob-xp.ZOMBIE", 15);
         c.addDefault("leveling.mob-xp.SKELETON", 18);
         c.addDefault("leveling.mob-xp.SPIDER", 12);
         c.addDefault("leveling.mob-xp.CREEPER", 22);
         c.addDefault("leveling.mob-xp.ENDERMAN", 35);
         c.addDefault("leveling.mob-xp.PLAYER", 30);
-// nagrody/efekty przy awansie - format EFFECT:durationTicks:amplifier
         c.addDefault("leveling.rewards.warrior.on-levelup-effects", List.of(
-                "INCREASE_DAMAGE:200:0" // Siła I przez 10s (200 ticków)
+                "INCREASE_DAMAGE:200:0"
         ));
         c.addDefault("leveling.rewards.mage.on-levelup-effects", List.of(
-                "REGENERATION:160:0" // Regen I przez 8s
+                "REGENERATION:160:0"
         ));
         c.addDefault("leveling.rewards.archer.on-levelup-effects", List.of(
-                "SPEED:200:1" // Szybkość II przez 10s
+                "SPEED:200:1"
         ));
 
         c.addDefault("leveling.bonuses.attack-per-level.warrior", 0.5);
@@ -104,7 +100,6 @@ public class ConfigUtils {
         c.addDefault("leveling.bonuses.attack-per-level.archer", 0.3);
         c.addDefault("leveling.bonuses.arrow-damage-multiplier-per-level", 0.05);
 
-// kopiuj domyślne bez nadpisywania istniejącego configu
         c.options().copyDefaults(true);
     }
 }

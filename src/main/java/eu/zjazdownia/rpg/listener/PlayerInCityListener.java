@@ -25,7 +25,6 @@ public class PlayerInCityListener implements Listener {
     public void onPlayerMove(PlayerMoveEvent e) {
         Player p = e.getPlayer();
 
-        // sprawdź, czy faktycznie przeszedł na inny blok
         if (e.getFrom().getBlockX() == e.getTo().getBlockX() &&
                 e.getFrom().getBlockZ() == e.getTo().getBlockZ()) {
             return;
