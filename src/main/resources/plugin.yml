@@ -1,3 +1,6 @@
+# Deskryptor pluginu ZjazdowniaRPG (Bukkit/Spigot)
+# Zależność: nLogin. Komendy: party, konto, klasa, resetkonto, zradmin, city, menu.
+
 name: ZjazdowniaRPG
 main: eu.zjazdownia.rpg.ZjazdowniaRPG
 version: 1.0.0

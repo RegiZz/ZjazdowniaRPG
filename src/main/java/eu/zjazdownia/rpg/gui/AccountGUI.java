@@ -1,5 +1,10 @@
 package eu.zjazdownia.rpg.gui;
 
+/**
+ * GUI wyboru konta: konto 1 (darmowe) i konto 2 (z uprawnieniem zjazdownia.account.2).
+ * Po wyborze konta ładuje ekwipunek, ewentualnie otwiera ClassGUI lub pokazuje scoreboard;
+ * przy pierwszym koncie dodaje Heartstone jeśli brak.
+ */
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.account.AccountManager;
 import eu.zjazdownia.rpg.magicItems.Heartstone;

@@ -1,17 +1,20 @@
 package eu.zjazdownia.rpg.friends;
 
-import jdk.jfr.Frequency;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import java.util.*;
 
+/**
+ * Menedżer listy znajomych: mapa gracz -> zbiór UUID znajomych (relacja symetryczna).
+ * Używany przez MenuGUI (dodawanie, wyświetlanie znajomych).
+ */
 public class FriendsManager {
 
-    public FriendsManager(){
-
+    public FriendsManager() {
     }
 
+    /** Mapa UUID gracza -> zbiór UUID znajomych. */
     private final Map<UUID, Set<UUID>> friends = new HashMap<>();
 
     public Set<UUID> getFriends(UUID player) {

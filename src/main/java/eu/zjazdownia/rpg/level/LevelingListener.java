@@ -1,5 +1,10 @@
 package eu.zjazdownia.rpg.level;
 
+/**
+ * Listener levelowania: zapisuje ostatniego damagera przy EntityDamageByEntityEvent;
+ * przy śmierci moba przyznaje XP zabójcy (lub ostatniemu damagerowi w oknie 8s).
+ * W party dzieli XP między członków w zasięgu; uwzględnia poziom moba (mob_level w PDC).
+ */
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.party.Party;
 import eu.zjazdownia.rpg.party.PartyManager;
@@ -24,15 +29,30 @@ public class LevelingListener implements Listener {
     private final ZjazdowniaRPG plugin;
     private final LevelManager levels;
     private final PartyManager parties;
+    /** Ostatni gracz który zadał obrażenia danemu entity (do przyznania XP przy śmierci). */
     private final Map<UUID, UUID> lastDamagerPlayer = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastDamagerTime = new ConcurrentHashMap<>();
-    private final long DAMAGE_TIMEOUT_MS = 8_000L; // 8s okno
+
+    private long damageTimeoutMs;
+    private int partyRadiusBlocks;
+    private int partyXpBonus;
+    private double mobXpMultiplierPerLevel;
 
     public LevelingListener(ZjazdowniaRPG plugin, LevelManager levels, PartyManager parties) {
         this.plugin = plugin;
         this.levels = levels;
         this.parties = parties;
+        reloadFromConfig();
         plugin.getLogger().info("LevelingListener created");
+    }
+
+    /** Przeładowuje parametry z config.yml (leveling.damage-timeout-ms, party-radius-blocks, party-xp-bonus, mob-xp-multiplier-per-level). */
+    public void reloadFromConfig() {
+        var cfg = plugin.getConfig();
+        damageTimeoutMs = Math.max(1000, cfg.getLong("leveling.damage-timeout-ms", 8000));
+        partyRadiusBlocks = Math.max(1, cfg.getInt("leveling.party-radius-blocks", 70));
+        partyXpBonus = Math.max(0, cfg.getInt("leveling.party-xp-bonus", 5));
+        mobXpMultiplierPerLevel = Math.max(0, cfg.getDouble("leveling.mob-xp-multiplier-per-level", 0.25));
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -65,7 +85,7 @@ public class LevelingListener implements Listener {
             UUID entId = e.getEntity().getUniqueId();
             Long time = lastDamagerTime.get(entId);
             UUID pu = lastDamagerPlayer.get(entId);
-            if (time != null && pu != null && (System.currentTimeMillis() - time) <= DAMAGE_TIMEOUT_MS) {
+            if (time != null && pu != null && (System.currentTimeMillis() - time) <= damageTimeoutMs) {
                 killer = plugin.getServer().getPlayer(pu);
             }
         }
@@ -84,7 +104,7 @@ public class LevelingListener implements Listener {
         PersistentDataContainer data = mob.getPersistentDataContainer();
 
         int mobLevel = data.getOrDefault(key, PersistentDataType.INTEGER, 1);
-        int finalXp = (int) Math.round(basexp * (1.0 + (mobLevel - 1) * 0.25));
+        int finalXp = (int) Math.round(basexp * (1.0 + (mobLevel - 1) * mobXpMultiplierPerLevel));
 
         Party party = parties.getParty(killer.getUniqueId());
 
@@ -98,13 +118,13 @@ public class LevelingListener implements Listener {
                 }
             }
 
-            int xpPerMember = (finalXp / Math.max(1, membersOnline)) + 5;
+            int xpPerMember = (finalXp / Math.max(1, membersOnline)) + partyXpBonus;
 
             for (UUID memberId : party.getMembers()) {
                 Player member = plugin.getServer().getPlayer(memberId);
                 if (member != null && member.isOnline()
                         && member.getWorld().equals(killer.getWorld())
-                        && member.getLocation().distance(killer.getLocation()) <= 70) {
+                        && member.getLocation().distance(killer.getLocation()) <= partyRadiusBlocks) {
                     levels.addExp(member, xpPerMember);
                 }
             }

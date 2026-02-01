@@ -1,5 +1,9 @@
 package eu.zjazdownia.rpg.magicItems;
 
+/**
+ * Lightning Wand: przedmiot (Bamboo) — prawy klik w cel (raytrace bloków) zamiata
+ * obszar błyskawicami, zadając obrażenia żywym entity. Cooldown 50s. Nie można stawiać jako blok.
+ */
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.classes.ClassAbilities;
 import org.bukkit.*;
@@ -25,10 +29,27 @@ public class LightningWand implements Listener {
     private final ZjazdowniaRPG plugin;
     private final Map<UUID, Long> cooldowns = new HashMap<>();
 
-    private final long COOLDOWN_MS = 50_000;
+    private long cooldownMs;
+    private int lightningCount;
+    private double baseDamage;
+    private double radius;
+    private double spread;
+    private int raytraceRange;
 
     public LightningWand(ZjazdowniaRPG plugin) {
         this.plugin = plugin;
+        reloadFromConfig();
+    }
+
+    /** Przeładowuje parametry z config.yml (lightning-wand.*). */
+    public void reloadFromConfig() {
+        var cfg = plugin.getConfig();
+        cooldownMs = Math.max(1000, cfg.getLong("lightning-wand.cooldown-ms", 50000));
+        lightningCount = Math.max(1, cfg.getInt("lightning-wand.lightning-count", 4));
+        baseDamage = Math.max(0, cfg.getDouble("lightning-wand.base-damage", 14.0));
+        radius = Math.max(0.5, cfg.getDouble("lightning-wand.radius", 2.5));
+        spread = Math.max(0, cfg.getDouble("lightning-wand.spread", 4.5));
+        raytraceRange = Math.max(5, cfg.getInt("lightning-wand.raytrace-range", 100));
     }
 
     public static ItemStack createWand(){
@@ -81,25 +102,17 @@ public class LightningWand implements Listener {
             return;
         }
 
-        RayTraceResult result = player.rayTraceBlocks(100);
+        RayTraceResult result = player.rayTraceBlocks(raytraceRange);
         if (result == null) return;
 
         Block hitBlock = result.getHitBlock();
         if (hitBlock == null) return;
 
-        Location strikeLocation = hitBlock.getLocation().add(0.5, 1, 0.5);
-
-
-        cooldowns.put(uuid, Long.valueOf(now + COOLDOWN_MS));
+        cooldowns.put(uuid, Long.valueOf(now + cooldownMs));
 
         int lvl = plugin.accounts().getLevel(player.getUniqueId());
         double flat = plugin.levels().getAttackPerLevelMage() * Math.max(0, lvl - 1);
-
-        int lightningCount = 4;
-        double damage = 14.0 + flat;
-        double radius = 2.5;
-        double spread = 4.5;
-
+        double damage = baseDamage + flat;
 
         Location base = hitBlock.getLocation().add(0.5, 1, 0.5);
         World world = base.getWorld();

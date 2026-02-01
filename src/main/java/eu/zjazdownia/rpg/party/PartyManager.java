@@ -5,9 +5,15 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.*;
 
+/**
+ * Menedżer party: tworzenie, zaproszenia, dołączanie, opuszczanie, rozwiązywanie.
+ * Mapuje UUID gracza na Party; zaproszenia target -> inviter.
+ */
 public class PartyManager {
 
+    /** UUID członka -> jego party. */
     private final Map<UUID, Party> partyByMember = new HashMap<>();
+    /** UUID zaproszonego -> UUID zapraszającego. */
     private final Map<UUID, UUID> invites = new HashMap<>();
     private final Plugin plugin;
 

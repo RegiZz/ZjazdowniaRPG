@@ -7,6 +7,10 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+/**
+ * Komenda /klasa: otwiera GUI wyboru klasy tylko gdy konto nie ma jeszcze wybranej klasy;
+ * w przeciwnym razie informuje o /resetkonto.
+ */
 public class KlasaCommand implements CommandExecutor {
     private final ClassGUI gui;
     private final AccountManager am;

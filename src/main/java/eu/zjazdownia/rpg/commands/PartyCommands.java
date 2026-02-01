@@ -13,6 +13,9 @@ import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
+/**
+ * Komenda /party: create, invite, join, leave, disband, list. Obsługa party przez PartyManager.
+ */
 public class PartyCommands implements CommandExecutor {
 
     private final PartyManager manager;

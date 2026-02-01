@@ -1,5 +1,10 @@
 package eu.zjazdownia.rpg.account;
 
+/**
+ * Menedżer kont graczy: wielokrotne konta na gracza (UUID), zapis/odczyt z plików YAML
+ * w katalogu players/, cache w pamięci. Przechowuje klasę, poziom, exp, ostatnią lokację
+ * oraz ekwipunek per konto.
+ */
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.util.LocUtil;
 import org.bukkit.Location;
@@ -14,12 +19,16 @@ import static org.apache.commons.lang3.SerializationUtils.serialize;
 
 public class AccountManager {
     private final ZjazdowniaRPG plugin;
+    /** Cache: UUID gracza -> jego plik YAML (accounts, currentAccount, lastLocation). */
     private final Map<UUID, YamlConfiguration> cache = new HashMap<>();
+    /** Katalog players/ w data folderze pluginu. */
     private final File dir;
 
     public AccountManager(ZjazdowniaRPG plugin) {
         this.plugin = plugin;
-        this.dir = new File(plugin.getDataFolder(), "players");
+        String dirName = plugin.getConfig().getString("account.players-dir", "players");
+        if (dirName == null || dirName.isBlank()) dirName = "players";
+        this.dir = new File(plugin.getDataFolder(), dirName);
         if (!dir.exists()) dir.mkdirs();
     }
 
@@ -27,6 +36,7 @@ public class AccountManager {
         return new File(dir, id.toString() + ".yml");
     }
 
+    /** Ładuje dane gracza do cache (jeśli jeszcze nie załadowane) i uzupełnia domyślne klucze. */
     public void ensureLoaded(UUID id) {
         cache.computeIfAbsent(id, k -> {
             File f = file(k);
@@ -38,6 +48,7 @@ public class AccountManager {
         });
     }
 
+    /** Zapisuje dane gracza z cache do pliku na dysku. */
     public void flush(UUID id) {
         YamlConfiguration yml = cache.get(id);
         if (yml == null) return;
@@ -62,6 +73,7 @@ public class AccountManager {
         cache.get(id).set("currentAccount", idx);
     }
 
+    /** Ścieżka w YAML do pola bieżącego konta (np. accounts.1.class). */
     private String path(UUID id, String key) {
         return "accounts." + getCurrentAccount(id) + "." + key;
     }
@@ -106,6 +118,7 @@ public class AccountManager {
         return LocUtil.fromSection(cache.get(id).getConfigurationSection("lastLocation"));
     }
 
+    /** Czyści dane bieżącego konta: klasa=null, level=1, exp=0. */
     public void clearCurrentAccount(UUID id) {
         ensureLoaded(id);
         cache.get(id).set(path(id, "class"), null);
@@ -113,6 +126,7 @@ public class AccountManager {
         cache.get(id).set(path(id, "exp"), 0); // reset exp
     }
 
+    /** Zapisuje ekwipunek (contents + armor) do konta o podanym indeksie. */
     public void saveInventory(UUID id, int accountIdx, ItemStack[] contents, ItemStack[] armor) {
         ensureLoaded(id);
         List<Map<String, Object>> serialized = new ArrayList<>();
@@ -131,10 +145,11 @@ public class AccountManager {
     }
 
 
+    /** Zwraca zapisany ekwipunek konta (36 slotów); pusty jeśli brak danych. */
     public ItemStack[] getInventory(UUID id, int accountIdx) {
         ensureLoaded(id);
         List<?> list = cache.get(id).getList("accounts." + accountIdx + ".inventory");
-        if (list == null) return new ItemStack[36]; // pusty ekwipunek
+        if (list == null) return new ItemStack[36];
         ItemStack[] inv = new ItemStack[36];
         for (int i = 0; i < Math.min(list.size(), 36); i++) {
             Object o = list.get(i);

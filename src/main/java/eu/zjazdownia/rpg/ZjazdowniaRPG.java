@@ -1,5 +1,10 @@
 package eu.zjazdownia.rpg;
 
+/**
+ * Główna klasa pluginu ZjazdowniaRPG dla serwera Minecraft.
+ * Inicjalizuje konfigurację, menedżerów (konta, klasy, party, miasta, levelowanie),
+ * rejestruje komendy i listenery oraz obsługuje teleportację graczy przy join/quit.
+ */
 import eu.zjazdownia.rpg.account.AccountManager;
 import eu.zjazdownia.rpg.cities.City;
 import eu.zjazdownia.rpg.classes.ClassAbilities;
@@ -41,8 +46,10 @@ import java.util.Map;
 import java.util.UUID;
 
 public class ZjazdowniaRPG extends JavaPlugin implements Listener {
+    /** Singleton instancji pluginu. */
     private static ZjazdowniaRPG instance;
 
+    /** Menedżer kont graczy (multi-konto, poziom, klasa, ekwipunek). */
     private AccountManager accountManager;
     private BoardManager boardManager;
     private AccountGUI accountGUI;
@@ -52,9 +59,12 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
     public PartyManager partyManager;
     public LightningWand lightningWand;
     public RicochetBow ricochetBow;
+    /** Menedżer listy znajomych. */
     public FriendsManager friendsManager;
+    /** GUI menu gracza (znajomi itd.). */
     public MenuGUI menuGUI;
 
+    /** Komendy administracyjne miast (create, delete, showborder itd.). */
     CityComands cityCommands = new CityComands(this);
 
     @Override
@@ -88,7 +98,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(accountGUI, this);
         getServer().getPluginManager().registerEvents(classGUI, this);
         getServer().getPluginManager().registerEvents(new LevelingListener(this, this.levelManager, partyManager), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerInCityListener(cityCommands), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerInCityListener(this, cityCommands), this);
         Bukkit.getPluginManager().registerEvents(cityCommands, this);
         Bukkit.getPluginManager().registerEvents(new MobSpawnListener(cityCommands, this), this);
         Bukkit.getPluginManager().registerEvents(new NLoginListener(this, this.accountGUI),  this);
@@ -160,11 +170,13 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         }
     }
 
-    private Location citySpawn(Location lastPlayerLoacation){
+    /**
+     * Zwraca punkt spawnu miasta, w którym gracz był ostatnio (lub null).
+     */
+    private Location citySpawn(Location lastPlayerLoacation) {
         CityComands CityCommands = new CityComands(this);
         City city = CityCommands.findCityAt(lastPlayerLoacation);
-
-        return city.getLocation();
+        return city == null ? null : city.getLocation();
     }
 
     @EventHandler

@@ -1,5 +1,10 @@
 package eu.zjazdownia.rpg.classes;
 
+/**
+ * Listener umiejętności klas: Wojownik (bonus do obrażeń wręcz, redukcja otrzymywanych),
+ * Mag (pocisk różdżką, Słabość/Spowolnienie, cooldown), Łucznik (mnożnik obrażeń/prędkości
+ * strzały, spowolnienie przy trafieniu). Parametry z configu (abilities.*).
+ */
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -35,9 +40,12 @@ public class ClassAbilities implements Listener {
 
     private final ZjazdowniaRPG plugin;
     private final Logger log;
+    /** Klucz PDC na pocisku maga (Snowball). */
     private final NamespacedKey MAGE_BOLT_KEY;
+    /** Klucz PDC na strzale łucznika. */
     private final NamespacedKey ARCHER_ARROW_KEY;
 
+    /** Mapowanie aliasów klas (np. "wojownik") na klucz kanoniczny ("warrior"). */
     private final Map<String, String> aliasToCanonical = new HashMap<>();
 
     private double warriorMeleeDamageMultiplier = 1.20;

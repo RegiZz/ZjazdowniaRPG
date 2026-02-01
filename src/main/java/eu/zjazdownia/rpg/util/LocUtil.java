@@ -4,7 +4,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 
+/**
+ * Konwersja Location <-> ConfigurationSection (world, x, y, z, yaw, pitch)
+ * do zapisu/odczytu lokacji w YAML (np. lastLocation gracza).
+ */
 public class LocUtil {
+    /** Zapisuje lokację do sekcji konfiguracji. */
     public static ConfigurationSection toSection(Location loc) {
         ConfigurationSection sec = new org.bukkit.configuration.MemoryConfiguration();
         sec.set("world", loc.getWorld().getName());
@@ -16,6 +21,7 @@ public class LocUtil {
         return sec;
     }
 
+    /** Odtwarza Location z sekcji konfiguracji; null jeśli sekcja lub świat nie istnieje. */
     public static Location fromSection(ConfigurationSection sec) {
         if (sec == null) return null;
         String w = sec.getString("world");

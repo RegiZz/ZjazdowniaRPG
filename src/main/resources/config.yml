@@ -1,19 +1,65 @@
+# Konfiguracja pluginu ZjazdowniaRPG
+# Wszystkie wartości mają domyślne ustawienia w ConfigUtils (automatyczne generowanie przy braku klucza).
+
 scoreboard:
   title: "&6&lZJAZDOWNIA.EU"
+  update-interval-ticks: 40      # co ile ticków odświeżać sidebar
+  rotation-interval-ticks: 300   # co ile ticków przełączać player/party (15s)
+
+account:
+  players-dir: "players"         # katalog plików kont graczy
+
+heartstone:
+  cooldown-ms: 30000             # cooldown po teleportacji (ms)
+  teleport-delay-seconds: 10    # odliczanie przed teleportem (s)
+
+lightning-wand:
+  cooldown-ms: 50000
+  lightning-count: 4
+  base-damage: 14.0
+  radius: 2.5
+  spread: 4.5
+  raytrace-range: 100
+
+ricochet-bow:
+  default-jumps: 4
+  search-range: 10
+  damage-multiplier-per-bounce: 0.9
+  arrow-speed-multiplier: 2.5
+
+player-in-city:
+  message-cooldown-ms: 3000     # cooldown komunikatu "Witaj w mieście" (ms)
+
+cities:
+  showborder-interval-ticks: 10 # odświeżanie wizualizacji granic (ticki)
+
+leveling:
+  damage-timeout-ms: 8000       # okno czasowe damagera dla XP (ms)
+  party-radius-blocks: 70       # zasięg party do podziału XP (bloki)
+  party-xp-bonus: 5             # bonus XP za członka party
+  mob-xp-multiplier-per-level: 0.25  # mnożnik XP za poziom moba
+
+mob-level:
+  default-level-outside-city: 1 # poziom mobów poza miastem
+  health-per-level: 0.2         # mnożnik HP moba per level
+  attack-per-level: 0.15        # mnożnik ataku moba per level
+
+nlogin:
+  gui-open-delay-ticks: 20      # opóźnienie otwarcia GUI konta po logowaniu (1s = 20)
 
 abilities:
   warrior:
-    melee-damage-multiplier: 1.20 # mnożnik obrażeń wręcz
-    damage-taken-multiplier: 0.90 # mnożnik otrzymywanych obrażeń
+    melee-damage-multiplier: 1.20
+    damage-taken-multiplier: 0.90
   mage:
     bolt:
-      damage: 6.0 # obrażenia pocisku
-      cooldown-seconds: 5.0 # CD w sekundach
-      speed: 1.4 # prędkość pocisku
-      weakness-seconds: 4 # czas Słabości po trafieniu
-      slow-seconds: 3 # czas Spowolnienia po trafieniu
+      damage: 6.0
+      cooldown-seconds: 5.0
+      speed: 1.4
+      weakness-seconds: 4
+      slow-seconds: 3
   archer:
-    arrow-damage-multiplier: 1.25 # mnożnik obrażeń z łuku
-    arrow-speed-multiplier: 1.05 # mnożnik prędkości strzały
-    slow-seconds: 2 # spowolnienie po trafieniu strzałą
-    slow-amplifier: 1 # poziom spowolnienia (0 = I, 1 = II)
+    arrow-damage-multiplier: 1.25
+    arrow-speed-multiplier: 1.05
+    slow-seconds: 2
+    slow-amplifier: 1

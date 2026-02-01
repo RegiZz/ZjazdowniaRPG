@@ -6,6 +6,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+/**
+ * Listener join/quit: przy joinie ładuje dane konta (ensureLoaded), przy quit zapisuje (flush).
+ */
 public class PlayerJoinQuitListener implements Listener {
 
     private final ZjazdowniaRPG plugin;

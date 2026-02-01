@@ -1,5 +1,6 @@
 package eu.zjazdownia.rpg.listener;
 
+import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.cities.City;
 import eu.zjazdownia.rpg.commands.CityComands;
 import org.bukkit.entity.Player;
@@ -9,16 +10,29 @@ import org.bukkit.event.player.PlayerMoveEvent;
 
 import java.util.*;
 
+/**
+ * Listener ruchu gracza: wykrywa wejście/wyjście między miastami i pokazuje
+ * tytuł "Witaj w mieście X" z cooldownem z configu (player-in-city.message-cooldown-ms).
+ */
 public class PlayerInCityListener implements Listener {
 
+    private final ZjazdowniaRPG plugin;
     private final CityComands cityCommands;
+    /** Ostatnie miasto, w którym był gracz (do wykrywania zmiany). */
     private final Map<UUID, City> playerCities = new HashMap<>();
     private final Map<UUID, Long> lastMessageTime = new HashMap<>();
 
-    public static final long MESSAGE_COOLDOWN = 3000; // w milisekundach
+    private long messageCooldownMs;
 
-    public PlayerInCityListener(CityComands cityCommands) {
+    public PlayerInCityListener(ZjazdowniaRPG plugin, CityComands cityCommands) {
+        this.plugin = plugin;
         this.cityCommands = cityCommands;
+        reloadFromConfig();
+    }
+
+    /** Przeładowuje parametry z config.yml (player-in-city.message-cooldown-ms). */
+    public void reloadFromConfig() {
+        messageCooldownMs = Math.max(0, plugin.getConfig().getLong("player-in-city.message-cooldown-ms", 3000));
     }
 
     @EventHandler
@@ -36,7 +50,7 @@ public class PlayerInCityListener implements Listener {
         long now = System.currentTimeMillis();
         long lastMsg = lastMessageTime.getOrDefault(p.getUniqueId(), 0L);
 
-        if (now - lastMsg < MESSAGE_COOLDOWN) {
+        if (now - lastMsg < messageCooldownMs) {
             return;
         }
 

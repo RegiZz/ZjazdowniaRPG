@@ -13,15 +13,19 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.*;
 import java.util.logging.Level;
 
+/**
+ * Menedżer levelowania: wymagane XP per poziom (baseExp + stepExp), max level,
+ * HP per level, bonusy ataku per klasa, XP za moby, efekty przy levelup.
+ * Odświeża atrybuty gracza (max HP, attack damage) po levelup lub komendzie admina.
+ */
 public class LevelManager {
     private final ZjazdowniaRPG plugin;
-    // Konfig
     private int baseExp;
     private int stepExp;
     public int maxLevel;
     private double healthPerLevel;
 
-    // bonusy ataku
+    /** Bonusy ataku per poziom (flat lub mnożnik) per klasa. */
     private double attackPerLevelWarrior = 0.5; // flat damage per level
     private double attackPerLevelMage = 0.2;
     private double attackPerLevelArcher = 0.3;
@@ -30,7 +34,7 @@ public class LevelManager {
     private final Map<EntityType, Integer> mobXp = new EnumMap<>(EntityType.class);
     private final Map<String, List<EffectSpec>> onLevelupEffects = new HashMap<>();
 
-    // stałe UUIDy do identyfikacji modifierów (jedno UUID na klasę)
+    /** UUID modyfikatorów ataku per klasa (do usuwania przy refresh). */
     private static final UUID MOD_UUID_WARRIOR = UUID.fromString("2b6f3b3a-1f7b-4a3d-9b8d-111111111111");
     private static final UUID MOD_UUID_MAGE = UUID.fromString("2b6f3b3a-1f7b-4a3d-9b8d-222222222222");
     private static final UUID MOD_UUID_ARCHER = UUID.fromString("2b6f3b3a-1f7b-4a3d-9b8d-333333333333");

@@ -19,6 +19,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Komenda administracyjna /zradmin: setlevel, addxp, setclass, givewand, givebow, info, setfirstspawn.
+ * Wymaga uprawnienia zjazdownia.admin.
+ */
 public class ZRAdminCommand implements CommandExecutor {
 
     private final ZjazdowniaRPG plugin;

@@ -5,6 +5,11 @@ import eu.zjazdownia.rpg.account.AccountManager;
 import eu.zjazdownia.rpg.party.Party;
 import eu.zjazdownia.rpg.party.PartyManager;
 import org.bukkit.Bukkit;
+
+/**
+ * Menedżer scoreboardu: pokazuje sidebar z nickiem, klasą, poziomem, IP (z configu)
+ * lub przełącza na listę party (rotacja co 15s). Taski odświeżania i rotacji per gracz.
+ */
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
@@ -25,17 +30,28 @@ public class BoardManager {
 
     private final Map<UUID, BoardTasks> tasks = new HashMap<>();
 
+    private long updateIntervalTicks;
+    private long rotationIntervalTicks;
+
     public BoardManager(ZjazdowniaRPG plugin) {
         this.plugin = plugin;
+        reloadFromConfig();
     }
 
-    // Holder tasków
+    /** Przeładowuje parametry z config.yml (scoreboard.update-interval-ticks, rotation-interval-ticks). */
+    public void reloadFromConfig() {
+        var cfg = plugin.getConfig();
+        updateIntervalTicks = Math.max(1, cfg.getLong("scoreboard.update-interval-ticks", 40));
+        rotationIntervalTicks = Math.max(1, cfg.getLong("scoreboard.rotation-interval-ticks", 300));
+    }
+
+    /** Holder tasków: odświeżanie linii i rotacja party/player. */
     private static class BoardTasks {
         BukkitTask updateTask;
         BukkitTask rotationTask;
     }
 
-    // Pokazuje scoreboard gracza
+    /** Inicjuje scoreboard dla gracza (player board + rotacja na party board). */
     public void show(Player p, AccountManager am, PartyManager pm) {
         hide(p);
 
@@ -48,7 +64,7 @@ public class BoardManager {
         BukkitTask updateTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (showingParty.getOrDefault(uuid, false)) return;
             showPlayerBoard(p, am);
-        }, 0L, 40L);
+        }, 0L, updateIntervalTicks);
 
         BukkitTask rotationTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             Party party = pm.getParty(uuid);
@@ -68,7 +84,7 @@ public class BoardManager {
                 showPlayerBoard(p, am);
             }
 
-        }, 20L, 300L);
+        }, 20L, rotationIntervalTicks);
 
         BoardTasks bt = new BoardTasks();
         bt.updateTask = updateTask;
@@ -76,7 +92,7 @@ public class BoardManager {
         tasks.put(uuid, bt);
     }
 
-    // Pokazuje zwykły scoreboard gracza
+    /** Ustawia sidebar na standardowy (nick, klasa, poziom, IP z configu). */
     public void showPlayerBoard(Player p, AccountManager am) {
         UUID uuid = p.getUniqueId();
         Scoreboard sb = p.getScoreboard();
@@ -104,7 +120,7 @@ public class BoardManager {
         }
     }
 
-    // Pokazuje scoreboard party
+    /** Ustawia sidebar na listę party (lider + członkowie). */
     public void showPartyBoard(Player p, Party party) {
         Scoreboard sb = p.getScoreboard();
         Objective old = sb.getObjective(DisplaySlot.SIDEBAR);
@@ -129,7 +145,7 @@ public class BoardManager {
         }
     }
 
-    // Zatrzymuje wszystkie taski gracza
+    /** Zatrzymuje taski scoreboardu dla gracza (np. przy quit). */
     public void hide(Player p) {
         UUID uuid = p.getUniqueId();
         BoardTasks bt = tasks.remove(uuid);

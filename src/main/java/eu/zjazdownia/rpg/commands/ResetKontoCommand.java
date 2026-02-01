@@ -10,6 +10,10 @@ import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
+/**
+ * Komenda /resetkonto [gracz]: resetuje dane bieżącego konta (klasa, level, exp).
+ * Wymaga uprawnienia zjazdownia.admin. Bez argumentu resetuje konto wysyłającego.
+ */
 public class ResetKontoCommand implements CommandExecutor {
     private final AccountManager am;
 

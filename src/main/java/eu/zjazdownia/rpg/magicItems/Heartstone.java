@@ -1,5 +1,10 @@
 package eu.zjazdownia.rpg.magicItems;
 
+/**
+ * Heartstone: przedmiot (Nether Star) do teleportacji do najbliższego miasta.
+ * Prawy klik uruchamia odliczanie (10s), ruch przerywa teleport; cooldown 30s.
+ * Nie można wyrzucić (undroppable PDC).
+ */
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.cities.City;
 import eu.zjazdownia.rpg.commands.CityComands;
@@ -31,12 +36,20 @@ public class Heartstone implements Listener {
     private final Map<UUID, BukkitTask> teleportTasks = new HashMap<>();
     private static final MiniMessage mm = MiniMessage.miniMessage();
 
-    private final long COOLDOWN_MS = 30_000; // 30 sekund
-    private final int TELEPORT_DELAY = 10; // sekundy na odliczanie
+    private long cooldownMs;
+    private int teleportDelaySeconds;
 
     public Heartstone(ZjazdowniaRPG plugin, CityComands cityCommands) {
         this.plugin = plugin;
         this.cityCommands = cityCommands;
+        reloadFromConfig();
+    }
+
+    /** Przeładowuje parametry z config.yml (heartstone.*). */
+    public void reloadFromConfig() {
+        var cfg = plugin.getConfig();
+        cooldownMs = Math.max(1000, cfg.getLong("heartstone.cooldown-ms", 30000));
+        teleportDelaySeconds = Math.max(1, cfg.getInt("heartstone.teleport-delay-seconds", 10));
     }
 
     public static ItemStack createHeartstone() {
@@ -101,12 +114,12 @@ public class Heartstone implements Listener {
 
         teleporting.add(uuid);
         player.sendMessage(ChatColor.AQUA + "Rozpoczynasz teleportację do " + ChatColor.LIGHT_PURPLE + city.getName() + ChatColor.AQUA + "...");
-        player.sendMessage(ChatColor.GRAY + "Nie ruszaj się przez " + TELEPORT_DELAY + " sekund!");
+        player.sendMessage(ChatColor.GRAY + "Nie ruszaj się przez " + teleportDelaySeconds + " sekund!");
 
         Location startLoc = player.getLocation().clone();
 
         BukkitRunnable runnable = new BukkitRunnable() {
-            int secondsLeft = TELEPORT_DELAY;
+            int secondsLeft = teleportDelaySeconds;
 
             @Override
             public void run() {
@@ -134,8 +147,8 @@ public class Heartstone implements Listener {
                     player.sendMessage(teleport);
                     player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
 
-                    cooldowns.put(uuid, Long.valueOf(System.currentTimeMillis() + COOLDOWN_MS));
-                    player.sendMessage(ChatColor.GRAY + "(Heartstone dostępny ponownie za 30 sekund)");
+                    cooldowns.put(uuid, Long.valueOf(System.currentTimeMillis() + cooldownMs));
+                    player.sendMessage(ChatColor.GRAY + "(Heartstone dostępny ponownie za " + (cooldownMs / 1000) + " sekund)");
                     return;
                 }
 

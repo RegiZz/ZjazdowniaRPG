@@ -9,6 +9,10 @@ import org.bukkit.entity.LivingEntity;
 import java.util.Objects;
 import java.util.UUID;
 
+/**
+ * Poziom moba: typ, level, bazowe HP/atak i skalowanie per level.
+ * applyTo(LivingEntity) ustawia max HP i obrażenia ataku zgodnie z poziomem.
+ */
 public class MobLevel {
 
     private static final UUID MOD_UUID_MOB_ATTACK = UUID.fromString("7b9c7d0c-b0d4-4a5c-8c1b-100000000001");
@@ -17,12 +21,20 @@ public class MobLevel {
     private int level;
 
     private double baseHealth;
-    private double healthPerLevel = 0.2;
+    private double healthPerLevel;
     private double baseAttack;
-    private double attackPerLevel = 0.15;
+    private double attackPerLevel;
 
+    /** Tworzy MobLevel z domyślnymi mnożnikami HP/ataku (0.2, 0.15). */
     public MobLevel(EntityType type, int level) {
+        this(type, level, 0.2, 0.15);
+    }
+
+    /** Tworzy MobLevel z podanymi mnożnikami HP i ataku per level. */
+    public MobLevel(EntityType type, int level, double healthPerLevel, double attackPerLevel) {
         this.type = Objects.requireNonNull(type, "type");
+        this.healthPerLevel = Math.max(0, healthPerLevel);
+        this.attackPerLevel = Math.max(0, attackPerLevel);
         setLevel(level);
     }
 

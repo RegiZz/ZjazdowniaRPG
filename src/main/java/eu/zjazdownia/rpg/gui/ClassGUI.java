@@ -22,6 +22,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * GUI wyboru klasy (Wojownik, Mag, Łucznik). Po wyborze zapisuje klasę w koncie,
+ * daje starter kit (broń, różdżka, łuk+strzały) i pokazuje scoreboard.
+ */
 public class ClassGUI implements Listener {
     private final ZjazdowniaRPG plugin;
 

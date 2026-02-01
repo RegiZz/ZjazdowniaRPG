@@ -3,7 +3,12 @@ package eu.zjazdownia.rpg.util;
 import org.bukkit.configuration.file.FileConfiguration;
 import java.util.List;
 
+/**
+ * Migracja i uzupełnianie domyślnych wartości konfiguracji pluginu (GUI konta/klasy,
+ * scoreboard, firstSpawn, leveling, abilities). Wywoływane przy starcie pluginu.
+ */
 public class ConfigUtils {
+    /** Dodaje domyślne klucze do konfiguracji i włącza copyDefaults. */
     public static void migrateAndFillDefaults(FileConfiguration c) {
         c.addDefault("server.ip", "zjazdownia.eu");
         c.addDefault("gui.account.title", "&8Wybierz konto");
@@ -99,6 +104,40 @@ public class ConfigUtils {
         c.addDefault("leveling.bonuses.attack-per-level.mage", 0.2);
         c.addDefault("leveling.bonuses.attack-per-level.archer", 0.3);
         c.addDefault("leveling.bonuses.arrow-damage-multiplier-per-level", 0.05);
+        c.addDefault("leveling.damage-timeout-ms", 8000);
+        c.addDefault("leveling.party-radius-blocks", 70);
+        c.addDefault("leveling.party-xp-bonus", 5);
+        c.addDefault("leveling.mob-xp-multiplier-per-level", 0.25);
+
+        c.addDefault("account.players-dir", "players");
+
+        c.addDefault("heartstone.cooldown-ms", 30000);
+        c.addDefault("heartstone.teleport-delay-seconds", 10);
+
+        c.addDefault("lightning-wand.cooldown-ms", 50000);
+        c.addDefault("lightning-wand.lightning-count", 4);
+        c.addDefault("lightning-wand.base-damage", 14.0);
+        c.addDefault("lightning-wand.radius", 2.5);
+        c.addDefault("lightning-wand.spread", 4.5);
+        c.addDefault("lightning-wand.raytrace-range", 100);
+
+        c.addDefault("ricochet-bow.default-jumps", 4);
+        c.addDefault("ricochet-bow.search-range", 10);
+        c.addDefault("ricochet-bow.damage-multiplier-per-bounce", 0.9);
+        c.addDefault("ricochet-bow.arrow-speed-multiplier", 2.5);
+
+        c.addDefault("player-in-city.message-cooldown-ms", 3000);
+
+        c.addDefault("cities.showborder-interval-ticks", 10);
+
+        c.addDefault("scoreboard.update-interval-ticks", 40);
+        c.addDefault("scoreboard.rotation-interval-ticks", 300);
+
+        c.addDefault("mob-level.default-level-outside-city", 1);
+        c.addDefault("mob-level.health-per-level", 0.2);
+        c.addDefault("mob-level.attack-per-level", 0.15);
+
+        c.addDefault("nlogin.gui-open-delay-ticks", 20);
 
         c.options().copyDefaults(true);
     }

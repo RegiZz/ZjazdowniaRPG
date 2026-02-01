@@ -15,21 +15,45 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
 
+/**
+ * Ricochet Bow: łuk ze strzałami odbijającymi się do kolejnego LivingEntity w zasięgu
+ * po trafieniu (liczba odbić w PDC ricochet_bow/ricochet_left). Obrażenia maleją przy każdym odbiciu.
+ */
 public class RicochetBow implements Listener {
 
+    /** Referencja pluginu do tworzenia NamespacedKey w getItem() (statyczna metoda). */
     public static ZjazdowniaRPG plugin;
+
+    private int defaultJumps;
+    private double searchRange;
+    private double damageMultiplierPerBounce;
+    private double arrowSpeedMultiplier;
 
     public RicochetBow(ZjazdowniaRPG plugin) {
         this.plugin = plugin;
+        RicochetBow.plugin = plugin;
+        reloadFromConfig();
     }
 
+    /** Przeładowuje parametry z config.yml (ricochet-bow.*). */
+    public void reloadFromConfig() {
+        var cfg = plugin.getConfig();
+        defaultJumps = Math.max(1, cfg.getInt("ricochet-bow.default-jumps", 4));
+        searchRange = Math.max(1, cfg.getDouble("ricochet-bow.search-range", 10));
+        damageMultiplierPerBounce = Math.max(0.1, Math.min(1.0, cfg.getDouble("ricochet-bow.damage-multiplier-per-bounce", 0.9)));
+        arrowSpeedMultiplier = Math.max(0.5, cfg.getDouble("ricochet-bow.arrow-speed-multiplier", 2.5));
+    }
+
+    /** Tworzy łuk z PDC ricochet_bow (liczba odbić z configu). */
     public static ItemStack getItem() {
         ItemStack rBow = new ItemStack(Material.BOW);
         ItemMeta meta = rBow.getItemMeta();
-        if (meta != null) {
+        if (meta != null && plugin != null) {
             meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&9RicoshetBow"));
+            int jumps = plugin.getConfig().getInt("ricochet-bow.default-jumps", 4);
+            jumps = Math.max(1, jumps);
             NamespacedKey key = new NamespacedKey(plugin, "ricochet_bow");
-            meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, 4);
+            meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, jumps);
 
             rBow.setItemMeta(meta);
         }
@@ -80,9 +104,8 @@ public class RicochetBow implements Listener {
         }
 
         LivingEntity nextTarget = null;
-        double range = 10;
 
-        for (Entity e : hit.getNearbyEntities(range, range, range)) {
+        for (Entity e : hit.getNearbyEntities(searchRange, searchRange, searchRange)) {
             if (e instanceof LivingEntity le && le != hit && le != player) {
                 nextTarget = le;
                 break;
@@ -102,7 +125,7 @@ public class RicochetBow implements Listener {
                 .normalize();
 
         arrow.teleport(hit.getEyeLocation());
-        arrow.setVelocity(direction.multiply(2.5));
+        arrow.setVelocity(direction.multiply(arrowSpeedMultiplier));
 
         arrow.getPersistentDataContainer().set(
                 jumpsKey,
@@ -110,7 +133,7 @@ public class RicochetBow implements Listener {
                 jumpsLeft - 1
         );
 
-        arrow.setDamage(arrow.getDamage() * 0.9);
+        arrow.setDamage(arrow.getDamage() * damageMultiplierPerBounce);
     }
 
 

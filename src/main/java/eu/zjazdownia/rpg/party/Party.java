@@ -4,6 +4,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Model party: lider (UUID) i zbiór członków. Używany przez PartyManager i PartyCommands.
+ */
 public class Party {
 
     private final UUID leader;

@@ -1,5 +1,10 @@
 package eu.zjazdownia.rpg.commands;
 
+/**
+ * Komendy administracyjne miast: /city create|delete|rename|showborder|list|info.
+ * Zarządza listą miast (citiesById), zapisem/odczytem z cities.yml oraz wizualizacją
+ * granic (showborder) i wykrywaniem miasta w danej lokacji (findCityAt, findNearestCity).
+ */
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.cities.City;
 import net.kyori.adventure.text.Component;
@@ -25,10 +30,13 @@ import java.util.*;
 
 public class CityComands implements CommandExecutor, Listener {
 
+    /** Mapa ID miasta -> obiekt City. */
     public final Map<Integer, City> citiesById = new HashMap<>();
     private Integer nextCityId = null;
     private final ZjazdowniaRPG plugin;
+    /** Aktywne zadania pokazywania granic miasta (per gracz). */
     private final Map<UUID, BukkitTask> activeBorderTasks = new HashMap<>();
+    /** Lokacje bloków granicy (do przywrócenia po wyłączeniu). */
     private final Map<UUID, List<Location>> activeBorderLocations = new HashMap<>();
     private final Map<UUID, List<BlockData>> activeBorderOriginalData = new HashMap<>();
     private static final MiniMessage mm = MiniMessage.miniMessage();
@@ -178,9 +186,10 @@ public class CityComands implements CommandExecutor, Listener {
                         activeBorderLocations.put(uuid, borderLocations);
                         activeBorderOriginalData.put(uuid, originalData);
 
+                        long intervalTicks = Math.max(1, plugin.getConfig().getLong("cities.showborder-interval-ticks", 10));
                         BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
                             showCityBorderBlocks(p, borderLocations);
-                        }, 0L, 10L); // co 10 ticków
+                        }, 0L, intervalTicks);
 
                         activeBorderTasks.put(uuid, task);
                         p.sendMessage(ChatColor.GREEN + "Pokazano granice miasta '" + targetCity.getName() + "'. Ponownie wpisz komendę, aby wyłączyć.");
@@ -213,6 +222,7 @@ public class CityComands implements CommandExecutor, Listener {
         return true;
     }
 
+    /** Oblicza listę lokacji bloków na obwodzie miasta (najwyższy blok w danym XZ). */
     public List<Location> computeBorderLocations(City city) {
         Location loc = city.getLocation();
         int radius = city.getRadius();
@@ -240,6 +250,7 @@ public class CityComands implements CommandExecutor, Listener {
         return list;
     }
 
+    /** Wysyła graczowi fałszywe bloki (LIGHT_BLUE_GLASS) w miejscach granicy. */
     public void showCityBorderBlocks(Player p, List<Location> borderLocations) {
         BlockData fake = Material.LIGHT_BLUE_STAINED_GLASS.createBlockData();
         for (Location borderLoc : borderLocations) {
@@ -248,6 +259,7 @@ public class CityComands implements CommandExecutor, Listener {
     }
 
 
+    /** Zwraca miasto, w którego obrębie leży lokacja (najbliższy środek); null jeśli brak. */
     public City findCityAt(Location loc) {
         if (loc == null || loc.getWorld() == null) return null;
         City found = null;
@@ -357,6 +369,7 @@ public class CityComands implements CommandExecutor, Listener {
         plugin.getLogger().info("Wczytano " + citiesById.size() + " miast z cities.yml");
     }
 
+    /** Zwraca najbliższe miasto do danej lokacji (bez warunku bycia w środku). */
     public City findNearestCity(Location loc) {
         if (loc == null || loc.getWorld() == null) return null;
         City nearest = null;

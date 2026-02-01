@@ -1,5 +1,9 @@
 package eu.zjazdownia.rpg.gui;
 
+/**
+ * Menu gracza (/menu): pozycje jak Znajomi; otwiera listę znajomych i AnvilGUI do dodawania
+ * znajomego po nicku. Używa FriendsManager.
+ */
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.friends.FriendsManager;
 import org.bukkit.Bukkit;
