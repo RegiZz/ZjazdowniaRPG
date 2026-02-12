@@ -105,15 +105,17 @@ public class AccountGUI implements Listener {
     public void onClick(InventoryClickEvent e) {
         if (e.getView().getTitle().equals(ChatColor.translateAlternateColorCodes('&',
                 plugin.getConfig().getString("gui.account.title")))) {
-            e.setCancelled(true);
-            HumanEntity he = e.getWhoClicked();
-            if (!(he instanceof Player p)) return;
+            if (e.getRawSlot() < e.getView().getTopInventory().getSize()) {
+                e.setCancelled(true);
+                HumanEntity he = e.getWhoClicked();
+                if (!(he instanceof Player p)) return;
 
-            if (e.getRawSlot() == 3) {
-                selectAccount(p, 1);
-            } else if (e.getRawSlot() == 5) {
-                if (p.hasPermission("zjazdownia.account.2")) selectAccount(p, 2);
-                else p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.8f, 0.5f);
+                if (e.getRawSlot() == 3) {
+                    selectAccount(p, 1);
+                } else if (e.getRawSlot() == 5) {
+                    if (p.hasPermission("zjazdownia.account.2")) selectAccount(p, 2);
+                    else p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.8f, 0.5f);
+                }
             }
         }
     }
@@ -121,11 +123,19 @@ public class AccountGUI implements Listener {
     private void selectAccount(Player p, int idx) {
         AccountManager am = plugin.accounts();
         am.setCurrentAccount(p.getUniqueId(), idx);
+        am.setPlayerActive(p.getUniqueId(), true);
 
         ItemStack[] inv = am.getInventory(p.getUniqueId(), idx);
         if(inv == null) inv = new ItemStack[36];
+        ItemStack[] armor = am.getArmor(p.getUniqueId(), idx);
+        if(armor == null) armor = new ItemStack[4];
+        ItemStack offHand = am.getOffHand(p.getUniqueId(), idx);
+
         p.getInventory().clear();
         p.getInventory().setContents(inv);
+        p.getInventory().setArmorContents(armor);
+        if (offHand != null) p.getInventory().setItemInOffHand(offHand);
+        p.updateInventory();
 
         p.closeInventory();
         p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.2f);

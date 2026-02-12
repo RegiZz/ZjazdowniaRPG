@@ -22,8 +22,9 @@ import org.bukkit.inventory.meta.SkullMeta;
 import net.wesjd.anvilgui.AnvilGUI;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 public class MenuGUI implements Listener {
@@ -61,23 +62,31 @@ public class MenuGUI implements Listener {
         if (e.getCurrentItem() == null) return;
 
         String title = e.getView().getTitle();
-        e.setCancelled(true);
 
-        if (title.equals(ChatColor.translateAlternateColorCodes('&',"&5Menu Gracza"))) {
-            if (e.getCurrentItem().getType() == Material.ENDER_EYE) {
-                openFriends(p);
+        if (title.equals(ChatColor.translateAlternateColorCodes('&', "&5Menu Gracza"))) {
+            if (e.getRawSlot() < e.getView().getTopInventory().getSize()) {
+                e.setCancelled(true);
+                if (e.getCurrentItem().getType() == Material.ENDER_EYE) {
+                    openFriends(p);
+                }
             }
         }
 
         if (title.equals("§8Znajomi")) {
-            if (e.getCurrentItem().getType() == Material.PAPER) {
-                p.closeInventory();
-                openAddFriendAnvil(p);
-            }
+            if (e.getRawSlot() < e.getView().getTopInventory().getSize()) {
+                e.setCancelled(true);
+                if (e.getCurrentItem().getType() == Material.PAPER) {
+                    p.closeInventory();
+                    openAddFriendAnvil(p);
+                }
 
-            if (e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
-                String name = e.getCurrentItem().getItemMeta().getDisplayName().replace("§e", "");
-                p.sendMessage("§eZnajomy: §f" + name);
+                if (e.getCurrentItem().getType() == Material.PLAYER_HEAD) {
+                    ItemMeta headMeta = e.getCurrentItem().getItemMeta();
+                    String name = headMeta != null && headMeta.hasDisplayName()
+                            ? ChatColor.stripColor(headMeta.getDisplayName())
+                            : "?";
+                    p.sendMessage("§eZnajomy: §f" + name);
+                }
             }
         }
     }
@@ -87,16 +96,41 @@ public class MenuGUI implements Listener {
 
         inv.setItem(49, item(Material.PAPER, "§bDodaj znajomego"));
 
+        var am = plugin.accounts();
         int slot = 0;
         for (UUID friendId : friendsManager.getFriends(player.getUniqueId())) {
             if (slot == 49) slot++;
 
+            OfflinePlayer offline = friendsManager.getOffline(friendId);
+            String friendName = offline.getName() != null ? offline.getName() : "Nieznany";
+            boolean online = offline.isOnline();
+
             ItemStack head = new ItemStack(Material.PLAYER_HEAD);
             SkullMeta meta = (SkullMeta) head.getItemMeta();
-            meta.setOwningPlayer(friendsManager.getOffline(friendId));
-            meta.setDisplayName("§e" + meta.getOwningPlayer().getName());
-            head.setItemMeta(meta);
+            if (meta == null) continue;
+            meta.setOwningPlayer(offline);
+            meta.setDisplayName((online ? "§e" : "§c") + friendName);
 
+            am.ensureLoaded(friendId);
+            int level = am.getLevel(friendId);
+            String classKey = am.getSelectedClass(friendId);
+            String classDisplay = classKey != null
+                    ? ChatColor.translateAlternateColorCodes('&',
+                    plugin.getConfig().getString("classes." + classKey + ".short", classKey))
+                    : "—";
+            int exp = am.getExp(friendId);
+
+            List<String> lore = new ArrayList<>();
+            lore.add("§7Poziom: §f" + level);
+            lore.add("§7Klasa: §f" + classDisplay);
+            lore.add("§7Doświadczenie: §f" + exp);
+            if (!online) {
+                lore.add("");
+                lore.add("§8(Ostatnie konto – gracz offline)");
+            }
+            meta.setLore(lore);
+
+            head.setItemMeta(meta);
             inv.setItem(slot++, head);
         }
 

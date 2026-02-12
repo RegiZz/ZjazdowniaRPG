@@ -65,47 +65,48 @@ public class ClassGUI implements Listener {
         String currentTitle = e.getView().getTitle();
         if (currentTitle == null || !ChatColor.stripColor(currentTitle).equals(ChatColor.stripColor(guiTitle))) return;
 
-        if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) return;
-        e.setCancelled(true);
+        if (e.getRawSlot() < e.getView().getTopInventory().getSize()) {
+            e.setCancelled(true);
 
-        HumanEntity he = e.getWhoClicked();
-        if (!(he instanceof Player)) return;
-        Player p = (Player) he;
+            HumanEntity he = e.getWhoClicked();
+            if (!(he instanceof Player)) return;
+            Player p = (Player) he;
 
-        if (e.getCurrentItem() == null || e.getCurrentItem().getType().isAir()) return;
-        if (!e.getCurrentItem().hasItemMeta()) return;
-        ItemMeta meta = e.getCurrentItem().getItemMeta();
-        if (meta == null || !meta.hasDisplayName()) return;
+            if (e.getCurrentItem() == null || e.getCurrentItem().getType().isAir()) return;
+            if (!e.getCurrentItem().hasItemMeta()) return;
+            ItemMeta meta = e.getCurrentItem().getItemMeta();
+            if (meta == null || !meta.hasDisplayName()) return;
 
-        String chosen = ChatColor.stripColor(meta.getDisplayName());
+            String chosen = ChatColor.stripColor(meta.getDisplayName());
 
-        ConfigurationSection classesSec = plugin.getConfig().getConfigurationSection("classes");
-        if (classesSec == null) return;
+            ConfigurationSection classesSec = plugin.getConfig().getConfigurationSection("classes");
+            if (classesSec == null) return;
 
-        String key = classesSec.getKeys(false).stream()
-                .filter(k -> {
-                    String disp = plugin.getConfig().getString("classes." + k + ".display");
-                    if (disp == null) return false;
-                    String dispCol = ChatColor.translateAlternateColorCodes('&', disp);
-                    return ChatColor.stripColor(dispCol).equals(chosen);
-                })
-                .findFirst().orElse(null);
-        if (key == null) return;
+            String key = classesSec.getKeys(false).stream()
+                    .filter(k -> {
+                        String disp = plugin.getConfig().getString("classes." + k + ".display");
+                        if (disp == null) return false;
+                        String dispCol = ChatColor.translateAlternateColorCodes('&', disp);
+                        return ChatColor.stripColor(dispCol).equals(chosen);
+                    })
+                    .findFirst().orElse(null);
+            if (key == null) return;
 
-        AccountManager am = plugin.accounts();
-        am.setSelectedClass(p.getUniqueId(), key);
+            AccountManager am = plugin.accounts();
+            am.setSelectedClass(p.getUniqueId(), key);
 
-        p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
-        p.closeInventory();
-        p.sendMessage(ChatColor.GREEN + "☑ Wybrałeś klasę: " + ChatColor.translateAlternateColorCodes('&',
-                plugin.getConfig().getString("classes." + key.toLowerCase(Locale.ROOT) + ".display")));
+            p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
+            p.closeInventory();
+            p.sendMessage(ChatColor.GREEN + "☑ Wybrałeś klasę: " + ChatColor.translateAlternateColorCodes('&',
+                    plugin.getConfig().getString("classes." + key.toLowerCase(Locale.ROOT) + ".display")));
 
 
-        giveStarterKit(p, key);
+            giveStarterKit(p, key);
 
-        PartyManager pm = plugin.partyManager;
+            PartyManager pm = plugin.partyManager;
 
-        plugin.board().show(p, am, pm);
+            plugin.board().show(p, am, pm);
+        }
     }
 
     private void giveStarterKit(Player p, String classKey) {

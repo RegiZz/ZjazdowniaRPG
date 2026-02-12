@@ -2,6 +2,7 @@ package eu.zjazdownia.rpg.listener;
 
 import com.nickuc.login.api.event.bukkit.auth.LoginEvent;
 import com.nickuc.login.api.event.bukkit.auth.PremiumLoginEvent;
+import com.nickuc.login.api.event.bukkit.auth.RegisterEvent;
 import com.nickuc.login.api.event.bukkit.auth.SessionLoginEvent;
 import eu.zjazdownia.rpg.ZjazdowniaRPG;
 import eu.zjazdownia.rpg.gui.AccountGUI;
@@ -26,6 +27,12 @@ public class NLoginListener implements Listener {
 
     private long getGuiOpenDelayTicks() {
         return Math.max(0, plugin.getConfig().getLong("nlogin.gui-open-delay-ticks", 20));
+    }
+
+    @EventHandler
+    public void onLogin(RegisterEvent e){
+        Player p = e.getPlayer();
+        Bukkit.getScheduler().runTaskLater(plugin, () -> accountGUI.openFor(p), getGuiOpenDelayTicks());
     }
 
     @EventHandler

@@ -15,8 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static org.apache.commons.lang3.SerializationUtils.serialize;
-
 public class AccountManager {
     private final ZjazdowniaRPG plugin;
     /** Cache: UUID gracza -> jego plik YAML (accounts, currentAccount, lastLocation). */
@@ -110,7 +108,10 @@ public class AccountManager {
 
     public void saveLastLocation(UUID id, Location loc) {
         ensureLoaded(id);
-        cache.get(id).set("lastLocation", LocUtil.toSection(loc));
+        var sec = LocUtil.toSection(loc);
+        if (sec != null) {
+            cache.get(id).set("lastLocation", sec);
+        }
     }
 
     public Location getLastLocation(UUID id) {
@@ -126,24 +127,24 @@ public class AccountManager {
         cache.get(id).set(path(id, "exp"), 0); // reset exp
     }
 
-    /** Zapisuje ekwipunek (contents + armor) do konta o podanym indeksie. */
-    public void saveInventory(UUID id, int accountIdx, ItemStack[] contents, ItemStack[] armor) {
-        ensureLoaded(id);
-        List<Map<String, Object>> serialized = new ArrayList<>();
-        for (ItemStack item : contents) {
-            if (item == null) {
-                serialized.add(null);
-            } else {
-                serialized.add(item.serialize());
-            }
-        }
-        cache.get(id).set("accounts." + accountIdx + ".inventory", serialized);
-        cache.get(id).set(
-                "accounts." + accountIdx + ".armor",
-                serialize(armor)
-        );
+    private final Set<UUID> activePlayers = new HashSet<>();
+
+    public void setPlayerActive(UUID id, boolean active) {
+        if (active) activePlayers.add(id);
+        else activePlayers.remove(id);
     }
 
+    public boolean isPlayerActive(UUID id) {
+        return activePlayers.contains(id);
+    }
+
+    /** Zapisuje ekwipunek (contents + armor + offhand) do konta o podanym indeksie. */
+    public void saveInventory(UUID id, int accountIdx, ItemStack[] contents, ItemStack[] armor, ItemStack offHand) {
+        ensureLoaded(id);
+        cache.get(id).set("accounts." + accountIdx + ".inventory", Arrays.asList(contents));
+        cache.get(id).set("accounts." + accountIdx + ".armor", Arrays.asList(armor));
+        cache.get(id).set("accounts." + accountIdx + ".offhand", offHand);
+    }
 
     /** Zwraca zapisany ekwipunek konta (36 slotów); pusty jeśli brak danych. */
     public ItemStack[] getInventory(UUID id, int accountIdx) {
@@ -152,13 +153,39 @@ public class AccountManager {
         if (list == null) return new ItemStack[36];
         ItemStack[] inv = new ItemStack[36];
         for (int i = 0; i < Math.min(list.size(), 36); i++) {
-            Object o = list.get(i);
-            if (o instanceof Map<?, ?> map) {
-                inv[i] = ItemStack.deserialize((Map<String, Object>) map);
-            } else {
-                inv[i] = null;
-            }
+            inv[i] = deserializeItem(list.get(i));
         }
         return inv;
+    }
+
+    /** Zwraca zapisany pancerz konta (4 sloty); pusty jeśli brak danych. */
+    public ItemStack[] getArmor(UUID id, int accountIdx) {
+        ensureLoaded(id);
+        List<?> list = cache.get(id).getList("accounts." + accountIdx + ".armor");
+        if (list == null) return new ItemStack[4];
+        ItemStack[] armor = new ItemStack[4];
+        for (int i = 0; i < Math.min(list.size(), 4); i++) {
+            armor[i] = deserializeItem(list.get(i));
+        }
+        return armor;
+    }
+
+    public ItemStack getOffHand(UUID id, int accountIdx) {
+        ensureLoaded(id);
+        Object o = cache.get(id).get("accounts." + accountIdx + ".offhand");
+        return deserializeItem(o);
+    }
+
+    private ItemStack deserializeItem(Object o) {
+        if (o == null) return null;
+        if (o instanceof ItemStack is) return is;
+        if (o instanceof Map<?, ?> map) {
+            try {
+                return ItemStack.deserialize((Map<String, Object>) map);
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return null;
     }
 }

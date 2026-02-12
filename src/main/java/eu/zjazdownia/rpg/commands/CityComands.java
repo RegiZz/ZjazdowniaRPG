@@ -53,7 +53,7 @@ public class CityComands implements CommandExecutor, Listener {
             sender.sendMessage(ChatColor.RED + "Brak uprawnień.");
             return true;
         }
-        if (args.length == 0 || args[0].toLowerCase().equals("help")) {
+        if (args.length == 0 || "help".equalsIgnoreCase(args[0])) {
             p.sendMessage(ChatColor.BLUE + "Cities");
             p.sendMessage(ChatColor.YELLOW + "/city info - informacje o miastach");
             p.sendMessage(ChatColor.YELLOW + "/city create <nazwa> <promien> <moblvl> - tworzy nowe miasto");

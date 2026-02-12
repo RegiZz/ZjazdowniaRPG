@@ -21,7 +21,7 @@ import java.util.Objects;
 
 public class MobSpawnListener implements Listener {
     private final CityComands cityCommands;
-    private ZjazdowniaRPG plugin;
+    private final ZjazdowniaRPG plugin;
 
     public MobSpawnListener(CityComands cityCommands,  ZjazdowniaRPG plugin) {
         this.cityCommands = cityCommands;

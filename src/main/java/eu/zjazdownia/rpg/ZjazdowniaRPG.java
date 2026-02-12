@@ -16,19 +16,14 @@ import eu.zjazdownia.rpg.gui.MenuGUI;
 import eu.zjazdownia.rpg.level.LevelManager;
 import eu.zjazdownia.rpg.level.LevelingListener;
 import eu.zjazdownia.rpg.listener.MobSpawnListener;
-import eu.zjazdownia.rpg.listener.NLoginListener;
 import eu.zjazdownia.rpg.listener.PlayerInCityListener;
-import eu.zjazdownia.rpg.listener.PlayerJoinQuitListener;
+import eu.zjazdownia.rpg.listener.NLoginListener;
 import eu.zjazdownia.rpg.magicItems.Heartstone;
 import eu.zjazdownia.rpg.magicItems.LightningWand;
 import eu.zjazdownia.rpg.magicItems.RicochetBow;
 import eu.zjazdownia.rpg.party.PartyManager;
 import eu.zjazdownia.rpg.scoreboard.BoardManager;
 import eu.zjazdownia.rpg.util.ConfigUtils;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -40,16 +35,12 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class ZjazdowniaRPG extends JavaPlugin implements Listener {
     /** Singleton instancji pluginu. */
     private static ZjazdowniaRPG instance;
 
-    /** Menedżer kont graczy (multi-konto, poziom, klasa, ekwipunek). */
     private AccountManager accountManager;
     private BoardManager boardManager;
     private AccountGUI accountGUI;
@@ -59,9 +50,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
     public PartyManager partyManager;
     public LightningWand lightningWand;
     public RicochetBow ricochetBow;
-    /** Menedżer listy znajomych. */
     public FriendsManager friendsManager;
-    /** GUI menu gracza (znajomi itd.). */
     public MenuGUI menuGUI;
 
     /** Komendy administracyjne miast (create, delete, showborder itd.). */
@@ -92,7 +81,6 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         cityCommands.loadCities();
 
 // rejestracja listenerów
-        Bukkit.getPluginManager().registerEvents(new PlayerJoinQuitListener(this), this);
         getServer().getPluginManager().registerEvents(new ClassAbilities(this), this);
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(accountGUI, this);
@@ -125,10 +113,14 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         for (Player p : Bukkit.getOnlinePlayers()) {
+            if (!accountManager.isPlayerActive(p.getUniqueId())) continue;
             accountManager.saveLastLocation(p.getUniqueId(), p.getLocation());
+            int currentAcc = accountManager.getCurrentAccount(p.getUniqueId());
+            accountManager.saveInventory(p.getUniqueId(), currentAcc, p.getInventory().getStorageContents(), p.getInventory().getArmorContents(), p.getInventory().getItemInOffHand());
+            boardManager.hide(p);
             accountManager.flush(p.getUniqueId());
-            cityCommands.saveCities();
         }
+        cityCommands.saveCities();
         if (accountManager != null) {
             accountManager.flushAll();
         }
@@ -143,49 +135,54 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
         accountManager.ensureLoaded(id);
 
         Location last = accountManager.getLastLocation(id);
-        Location spawn = Bukkit.getWorld("world").getSpawnLocation();
-        if(!p.hasPermission("zjazdownia.admin")){
+        World defaultWorld = Bukkit.getWorld("world");
+        Location spawn = defaultWorld != null ? defaultWorld.getSpawnLocation() : null;
+        if (!p.hasPermission("zjazdownia.admin")) {
             if (last != null && last.getWorld() != null) {
                 Bukkit.getScheduler().runTask(this, () -> {
-                    if(citySpawn(last) != null){
-                        p.teleport(citySpawn(last));
-                    }else{
+                    Location spawnAt = citySpawn(last);
+                    if (spawnAt != null) {
+                        p.teleport(spawnAt);
+                    } else if (spawn != null) {
                         p.teleport(spawn);
                     }
                 });
             }
-            else if(last == null){
+            } else if (last == null) {
                 String worldname = config.getString("firstSpawn.world");
                 double x = config.getDouble("firstSpawn.x");
                 double y = config.getDouble("firstSpawn.y");
                 double z = config.getDouble("firstSpawn.z");
-                float yaw = (float)config.getDouble("firstSpawn.yaw");
-                float pitch = (float)config.getDouble("firstSpawn.pitch");
+                float yaw = (float) config.getDouble("firstSpawn.yaw");
+                float pitch = (float) config.getDouble("firstSpawn.pitch");
 
-                World world = Bukkit.getWorld(worldname);
-                Location loc = new Location(world, x, y, z, yaw, pitch);
-
-                Bukkit.getScheduler().runTask(this, () -> p.teleport(loc));
+                World world = worldname != null ? Bukkit.getWorld(worldname) : null;
+                if (world != null) {
+                    Location loc = new Location(world, x, y, z, yaw, pitch);
+                    Bukkit.getScheduler().runTask(this, () -> p.teleport(loc));
+                } else if (spawn != null) {
+                    Bukkit.getScheduler().runTask(this, () -> p.teleport(spawn));
+                }
             }
         }
-    }
-
     /**
      * Zwraca punkt spawnu miasta, w którym gracz był ostatnio (lub null).
      */
-    private Location citySpawn(Location lastPlayerLoacation) {
-        CityComands CityCommands = new CityComands(this);
-        City city = CityCommands.findCityAt(lastPlayerLoacation);
+    private Location citySpawn(Location lastPlayerLocation) {
+        if (lastPlayerLocation == null) return null;
+        City city = cityCommands.findCityAt(lastPlayerLocation);
         return city == null ? null : city.getLocation();
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         Player p = e.getPlayer();
+        if (!accountManager.isPlayerActive(p.getUniqueId())) return;
         accountManager.saveLastLocation(p.getUniqueId(), p.getLocation());
         boardManager.hide(p);
-        accountManager.saveInventory(p.getUniqueId(), accountManager.getCurrentAccount(p.getUniqueId()), p.getInventory().getContents(), p.getInventory().getArmorContents());
+        accountManager.saveInventory(p.getUniqueId(), accountManager.getCurrentAccount(p.getUniqueId()), p.getInventory().getStorageContents(), p.getInventory().getArmorContents(), p.getInventory().getItemInOffHand());
         accountManager.flush(p.getUniqueId());
+        accountManager.setPlayerActive(p.getUniqueId(), false);
     }
 
 
@@ -194,4 +191,7 @@ public class ZjazdowniaRPG extends JavaPlugin implements Listener {
     public BoardManager board() { return boardManager; }
     public ClassGUI classGUI() { return classGUI; }
     public LevelManager levels() { return levelManager; }
+
 }
+
+

@@ -9,8 +9,9 @@ import org.bukkit.configuration.ConfigurationSection;
  * do zapisu/odczytu lokacji w YAML (np. lastLocation gracza).
  */
 public class LocUtil {
-    /** Zapisuje lokację do sekcji konfiguracji. */
+    /** Zapisuje lokację do sekcji konfiguracji. Zwraca null, jeśli lokacja lub świat jest null. */
     public static ConfigurationSection toSection(Location loc) {
+        if (loc == null || loc.getWorld() == null) return null;
         ConfigurationSection sec = new org.bukkit.configuration.MemoryConfiguration();
         sec.set("world", loc.getWorld().getName());
         sec.set("x", loc.getX());
